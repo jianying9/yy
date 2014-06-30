@@ -1,0 +1,69 @@
+.button {
+    cursor: pointer;
+}
+
+.hide {
+    display: none;
+}
+
+.window {
+    background: #FAFAFA;
+    border: 1px solid #B9B9B9;
+    border-radius: 3px;
+    padding: 4px;
+    z-index: 1;
+    position: absolute;
+}
+
+.window > .window_header {
+    height: 16px;
+    border-bottom: 1px solid gainsboro;
+    text-align: left;
+    font-weight: bold;
+    padding: 5px 0;
+}
+
+.window.notify > .window_header {
+    background: #2B7CAB;
+}
+
+.window.move > .window_header {
+    cursor: move;
+}
+
+.window_close {
+    height: 18px;
+    width: 18px;
+    background: url(images/icon.png) no-repeat -414px -108px;
+    cursor: pointer;
+}
+
+.window_close:hover {
+    background-position: -414px -90px;
+}
+
+.window > .window_close {
+    position: absolute;
+    right: 10px;
+    top: 4px;
+}
+
+.list {
+    position: relative;
+    overflow: hidden;
+}
+
+.panel > .scroll, .list > .scroll {
+    position: absolute;
+    width: 10px;
+    top: 0;
+    right: 1px;
+    background: #5E98BA;
+    border-radius: 3px;
+    display: none;
+    z-index: 1000;
+}
+
+.panel:hover > .scroll, .list:hover > .scroll {
+    display: block;
+}
