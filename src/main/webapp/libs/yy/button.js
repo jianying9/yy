@@ -1,5 +1,4 @@
-define('yy/button', ['require', './yy'], function(require) {
-    require('./yy');
+define('yy/button', ['require', 'yy/yy'], function(require) {
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -13,5 +12,3 @@ define('yy/button', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-

@@ -1,5 +1,4 @@
-define('yy/button', ['require', './yy'], function(require) {
-    require('./yy');
+define('yy/button', ['require', 'yy/yy'], function(require) {
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -13,9 +12,6 @@ define('yy/button', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-
-
 define('yy/config' ,['require'], function(require) {
     var self = {};
     //模块解析顺序
@@ -32,12 +28,9 @@ define('yy/config' ,['require'], function(require) {
     self.model = model;
     return self;
 });
-
-
-
-define('yy/form', ['require', './yy'], function(require) {
-    var yy = require('./yy');
-    var _utils = yy.getUtils();
+define('yy/form', ['require', 'yy/yy'], function(require) {
+    var _yy = require('yy/yy');
+    var _utils = _yy.getUtils();
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -128,11 +121,7 @@ define('yy/form', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-
-
-define('yy/label', ['require', './yy'], function(require) {
-    require('./yy');
+define('yy/label', ['require', 'yy/yy'], function(require) {
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -146,16 +135,12 @@ define('yy/label', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-
-
-define('yy/list', ['require', './yy', './list_item'], function(require) {
-    var yy = require('./yy');
-    require('./list_item');
-    var _index = yy.getIndex();
-    var _utils = yy.getUtils();
-    var _event = yy.getEvent();
-    var _components = yy.getComponents();
+define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
+    var _yy = require('yy/yy');
+    var _index = _yy.getIndex();
+    var _utils = _yy.getUtils();
+    var _event = _yy.getEvent();
+    var _components = _yy.getComponents();
     var self = {};
     self.parameters = ['scroll'];
     self.create = function(component, parameters) {
@@ -452,11 +437,7 @@ define('yy/list', ['require', './yy', './list_item'], function(require) {
     };
     return self;
 });
-
-
-
-define('yy/list_item', ['require', './yy'], function(require) {
-    require('./yy');
+define('yy/list_item', ['require', 'yy/yy'], function(require) {
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -489,11 +470,8 @@ define('yy/list_item', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-
-
-define('yy/module', ['require', './yy'], function(require) {
-    var yy = require('./yy');
+define('yy/module', ['require', 'yy/yy'], function(require) {
+    var _yy = require('yy/yy');
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -543,7 +521,7 @@ define('yy/module', ['require', './yy'], function(require) {
         };
         return component;
     };
-    var _components = yy.getComponents();
+    var _components = _yy.getComponents();
     //模块加载moduleLoader
     self.loadModule = function(moduleId, callback, loader) {
         if (!loader) {
@@ -577,11 +555,11 @@ define('yy/module', ['require', './yy'], function(require) {
     };
     return self;
 });
-define('yy/panel', ['require', './yy'], function(require) {
-    var yy = require('./yy');
-    var _index = yy.getIndex();
-    var _utils = yy.getUtils();
-    var _event = yy.getEvent();
+define('yy/panel', ['require', 'yy/yy'], function(require) {
+    var _yy = require('yy/yy');
+    var _index = _yy.getIndex();
+    var _utils = _yy.getUtils();
+    var _event = _yy.getEvent();
     var self = {};
     self.parameters = ['scroll'];
     self.create = function(component, parameters) {
@@ -651,18 +629,13 @@ define('yy/panel', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-
-
 /**
  * yy核心库
  */
 
-define('yy/yy', ['require', 'jquery', 'jquery.mousewheel', './config'], function(require) {
+define('yy/yy', ['require', 'jquery', 'yy/config'], function(require) {
 //require用于依赖加载
 //localRequire用于动态加载
-    require('jquery');
-    require('jquery.mousewheel');
     var self = {};
     //浏览器信息
     var _browser = {};
@@ -1022,7 +995,7 @@ define('yy/yy', ['require', 'jquery', 'jquery.mousewheel', './config'], function
             }
         }
     };
-    
+
     if ((window.MozWebSocket || window.WebSocket) && _context.webSocketServer) {
         var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
 //初始化websocket

@@ -1,5 +1,4 @@
-define('yy/label', ['require', './yy'], function(require) {
-    require('./yy');
+define('yy/label', ['require', 'yy/yy'], function(require) {
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -13,5 +12,3 @@ define('yy/label', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-

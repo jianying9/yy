@@ -1,5 +1,4 @@
-define('yy/list_item', ['require', './yy'], function(require) {
-    require('./yy');
+define('yy/list_item', ['require', 'yy/yy'], function(require) {
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -32,5 +31,3 @@ define('yy/list_item', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-

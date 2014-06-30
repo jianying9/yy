@@ -14,5 +14,3 @@ define('yy/config' ,['require'], function(require) {
     self.model = model;
     return self;
 });
-
-

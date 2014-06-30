@@ -1,5 +1,5 @@
-define('yy/module', ['require', './yy'], function(require) {
-    var yy = require('./yy');
+define('yy/module', ['require', 'yy/yy'], function(require) {
+    var _yy = require('yy/yy');
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -49,7 +49,7 @@ define('yy/module', ['require', './yy'], function(require) {
         };
         return component;
     };
-    var _components = yy.getComponents();
+    var _components = _yy.getComponents();
     //模块加载moduleLoader
     self.loadModule = function(moduleId, callback, loader) {
         if (!loader) {

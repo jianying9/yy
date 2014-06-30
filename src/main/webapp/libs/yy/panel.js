@@ -1,8 +1,8 @@
-define('yy/panel', ['require', './yy'], function(require) {
-    var yy = require('./yy');
-    var _index = yy.getIndex();
-    var _utils = yy.getUtils();
-    var _event = yy.getEvent();
+define('yy/panel', ['require', 'yy/yy'], function(require) {
+    var _yy = require('yy/yy');
+    var _index = _yy.getIndex();
+    var _utils = _yy.getUtils();
+    var _event = _yy.getEvent();
     var self = {};
     self.parameters = ['scroll'];
     self.create = function(component, parameters) {
@@ -72,5 +72,3 @@ define('yy/panel', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-

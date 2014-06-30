@@ -1,10 +1,9 @@
-define('yy/list', ['require', './yy', './list_item'], function(require) {
-    var yy = require('./yy');
-    require('./list_item');
-    var _index = yy.getIndex();
-    var _utils = yy.getUtils();
-    var _event = yy.getEvent();
-    var _components = yy.getComponents();
+define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
+    var _yy = require('yy/yy');
+    var _index = _yy.getIndex();
+    var _utils = _yy.getUtils();
+    var _event = _yy.getEvent();
+    var _components = _yy.getComponents();
     var self = {};
     self.parameters = ['scroll'];
     self.create = function(component, parameters) {
@@ -301,5 +300,3 @@ define('yy/list', ['require', './yy', './list_item'], function(require) {
     };
     return self;
 });
-
-

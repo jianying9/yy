@@ -1,6 +1,6 @@
-define('yy/form', ['require', './yy'], function(require) {
-    var yy = require('./yy');
-    var _utils = yy.getUtils();
+define('yy/form', ['require', 'yy/yy'], function(require) {
+    var _yy = require('yy/yy');
+    var _utils = _yy.getUtils();
     var self = {};
     self.parameters = [];
     self.create = function(component, parameters) {
@@ -91,5 +91,3 @@ define('yy/form', ['require', './yy'], function(require) {
     };
     return self;
 });
-
-

@@ -2,11 +2,9 @@
  * yy核心库
  */
 
-define('yy/yy', ['require', 'jquery', 'jquery.mousewheel', './config'], function(require) {
+define('yy/yy', ['require', 'jquery', 'yy/config'], function(require) {
 //require用于依赖加载
 //localRequire用于动态加载
-    require('jquery');
-    require('jquery.mousewheel');
     var self = {};
     //浏览器信息
     var _browser = {};
@@ -366,7 +364,7 @@ define('yy/yy', ['require', 'jquery', 'jquery.mousewheel', './config'], function
             }
         }
     };
-    
+
     if ((window.MozWebSocket || window.WebSocket) && _context.webSocketServer) {
         var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
 //初始化websocket
