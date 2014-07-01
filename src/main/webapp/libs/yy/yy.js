@@ -154,8 +154,8 @@ define('yy/yy', ['require', 'jquery', 'yy/config'], function(require) {
     //根对象
     var rootId = _index.nextIndex();
     $body.attr({
-        id: rootId,
-        onselectstart: "return false"
+        id: rootId
+//        onselectstart: "return false"
     });
     var _root = {
         type: 'root',
