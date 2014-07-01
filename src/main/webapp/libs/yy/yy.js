@@ -31,7 +31,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config'], function(require) {
     //context上下文对象
     var el = document.compatMode === "CSS1Compat" ? document.documentElement : document.body;
     var _context = {
-        httpServer: 'http://127.0.0.1/',
+        httpServer: 'http://127.0.0.1/service.io',
         webSocketServer: '',
         logLevel: 4,
         bodyWidth: el.clientWidth,
@@ -362,61 +362,61 @@ define('yy/yy', ['require', 'jquery', 'yy/config'], function(require) {
             } else {
                 this._logger.error('error message:' + msg);
             }
-        }
-    };
-
-    if ((window.MozWebSocket || window.WebSocket) && _context.webSocketServer) {
-        var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
-//初始化websocket
-        _message.send = function(msg) {
-            var that = this;
-            var msgText = '{';
-            for (var name in msg) {
-                msgText += '"' + name + '":"' + msg[name] + '",';
-            }
-            msgText = msgText.substr(0, msgText.length - 1);
-            msgText += '}';
-            if (that.webSocket && that.webSocket.readyState === 1) {
-                that.webSocket.send(msgText);
-                that.webSocket._logger.debug('sendMessage:' + msgText);
-            } else {
-                if (that.webSocket && that.webSocket.readyState !== 1) {
-                    that.webSocket.close();
-                    delete that.webSocket;
-                }
-                that.webSocket = new Socket(_context.webSocketServer);
-                that.webSocket._server = _context.webSocketServer;
-                that.webSocket._logger = _logger;
-                that.webSocket._event = _event;
-                that.webSocket.onopen = function(event) {
-                    this._logger.debug('connect:' + this._server);
-                    this.send(msgText);
-                    this._logger.debug('sendMessage:' + msgText);
-                };
-                that.webSocket.onmessage = function(event) {
-                    this._logger.debug('onMessage:' + event.data);
-                    var res = eval('(' + event.data + ')');
-                    that.notify(res);
-                };
-                that.webSocket.onclose = function(event) {
-                    delete that.webSocket;
-                    this._logger.debug('close:' + this._server);
-                };
-                that.webSocket.onerror = function(event) {
-                    delete that.webSocket;
-                    this._logger.debug('error:' + this._server);
-                };
-            }
-        };
-    } else {
-//初始化jsonp
-        _message.send = function(msg) {
+        },
+        send: function(msg) {
             var that = this;
             $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
                 that.notify(res);
             });
-        };
-    }
+        }
+    };
+
+    self.openWebSocket = function() {
+        if ((window.MozWebSocket || window.WebSocket) && _context.webSocketServer) {
+            var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
+//初始化websocket
+            _message.send = function(msg) {
+                var that = this;
+                var msgText = '{';
+                for (var name in msg) {
+                    msgText += '"' + name + '":"' + msg[name] + '",';
+                }
+                msgText = msgText.substr(0, msgText.length - 1);
+                msgText += '}';
+                if (that.webSocket && that.webSocket.readyState === 1) {
+                    that.webSocket.send(msgText);
+                    that.webSocket._logger.debug('sendMessage:' + msgText);
+                } else {
+                    if (that.webSocket && that.webSocket.readyState !== 1) {
+                        that.webSocket.close();
+                        delete that.webSocket;
+                    }
+                    that.webSocket = new Socket(_context.webSocketServer);
+                    that.webSocket._server = _context.webSocketServer;
+                    that.webSocket._logger = _logger;
+                    that.webSocket._event = _event;
+                    that.webSocket.onopen = function(event) {
+                        this._logger.debug('connect:' + this._server);
+                        this.send(msgText);
+                        this._logger.debug('sendMessage:' + msgText);
+                    };
+                    that.webSocket.onmessage = function(event) {
+                        this._logger.debug('onMessage:' + event.data);
+                        var res = eval('(' + event.data + ')');
+                        that.notify(res);
+                    };
+                    that.webSocket.onclose = function(event) {
+                        delete that.webSocket;
+                        this._logger.debug('close:' + this._server);
+                    };
+                    that.webSocket.onerror = function(event) {
+                        delete that.webSocket;
+                        this._logger.debug('error:' + this._server);
+                    };
+                }
+            };
+        }
+    };
     self.getMessage = function() {
         return _message;
     };
