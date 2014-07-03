@@ -77,7 +77,11 @@
                             <!-- 把以下js文件合并成一个js文件，是按顺序合并的 -->
                             <includes>
                                 <include>components/core.js</include>
+                                <include>components/enc-base64.js</include>
                                 <include>components/md5.js</include>
+                                <include>components/evpkdf.js</include>
+                                <include>components/cipher-core.js</include>
+                                <include>components/tripledes.js</include>
                             </includes>
                         </aggregation>
                         <!-- jquery-->
