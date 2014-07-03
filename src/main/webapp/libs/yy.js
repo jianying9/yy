@@ -633,9 +633,8 @@ define('yy/panel', ['require', 'yy/yy'], function(require) {
  * yy核心库
  */
 
-define('yy/yy', ['require', 'jquery', 'yy/config'], function(require) {
+define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) {
 //require用于依赖加载
-//localRequire用于动态加载
     var self = {};
     //浏览器信息
     var _browser = {};
@@ -959,6 +958,8 @@ define('yy/yy', ['require', 'jquery', 'yy/config'], function(require) {
     };
     //message消息管理对象
     var _message = {
+        difftime: 0,
+        desKey: 'wolf2014',
         actions: {},
         _logger: _logger,
         listen: function(component, actionName, func) {
@@ -980,6 +981,13 @@ define('yy/yy', ['require', 'jquery', 'yy/config'], function(require) {
                 delete action[id];
             }
         },
+        createSeed: function(msg) {
+            var serverTime = ((new Date()).getTime() + this.difftime).toString();
+            var keyHex = CryptoJS.enc.Utf8.parse(this.desKey);
+            var seed = CryptoJS.DES.encrypt(serverTime, keyHex, {iv: keyHex});
+            seed = CryptoJS.enc.Hex.stringify(seed.ciphertext);
+            msg.seed = seed;
+        },
         notify: function(res) {
             if (res.act) {
                 var action = this.actions[res.act];
@@ -991,23 +999,32 @@ define('yy/yy', ['require', 'jquery', 'yy/config'], function(require) {
                     }
                 }
             } else {
-                this._logger.error('error message:' + msg);
+                if (res.wolf && res.wolf === 'TIME') {
+                    var clientTime = (new Date()).getTime();
+                    this.difftime = res.time - clientTime;
+                }
             }
         },
         send: function(msg) {
             var that = this;
+            that.createSeed(msg);
             $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
                 that.notify(res);
             });
         }
     };
-
+    self.setKey = function(key) {
+        var b = CryptoJS.enc.Hex.parse(key);
+        _message.desKey = CryptoJS.enc.Utf8.stringify(b);
+        _message.send({wolf: 'TIME'});
+    };
     self.openWebSocket = function() {
         if ((window.MozWebSocket || window.WebSocket) && _context.webSocketServer) {
             var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
 //初始化websocket
             _message.send = function(msg) {
                 var that = this;
+                that.createSeed(msg);
                 var msgText = '{';
                 for (var name in msg) {
                     msgText += '"' + name + '":"' + msg[name] + '",';
