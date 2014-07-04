@@ -1002,6 +1002,10 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                 if (res.wolf && res.wolf === 'TIME') {
                     var clientTime = (new Date()).getTime();
                     this.difftime = res.time - clientTime;
+                    //写入cookie
+                    var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
+                    var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
+                    _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 1});
                 }
             }
         },
@@ -1016,7 +1020,15 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     self.setKey = function(key) {
         var b = CryptoJS.enc.Hex.parse(key);
         _message.desKey = CryptoJS.enc.Utf8.stringify(b);
-        _message.send({wolf: 'TIME'});
+        //检测cookie
+        var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
+        var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
+        var difftimeCookie = _cookie.getCookie(difftimeHex);
+        if (difftimeCookie) {
+            _message.difftime = parseInt(difftimeCookie);
+        } else {
+            _message.send({wolf: 'TIME'});
+        }
     };
     self.openWebSocket = function() {
         if ((window.MozWebSocket || window.WebSocket) && _context.webSocketServer) {
