@@ -369,12 +369,19 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                 }
             } else {
                 if (res.wolf && res.wolf === 'TIME') {
+                    //时间同步
                     var clientTime = (new Date()).getTime();
                     this.difftime = res.time - clientTime;
                     //写入cookie
                     var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
                     var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
                     _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 30});
+                    //判断是否有时间同步回调方法
+                    var timeInit = self._timeInit;
+                    if (timeInit) {
+                        timeInit();
+                        delete self._timeInit;
+                    }
                 }
             }
         },
@@ -384,66 +391,6 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
                 that.notify(res);
             });
-        }
-    };
-    self.setKey = function(key) {
-        var b = CryptoJS.enc.Hex.parse(key);
-        _message.desKey = CryptoJS.enc.Utf8.stringify(b);
-        //检测cookie
-        var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
-        var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
-        var difftimeCookie = _cookie.getCookie(difftimeHex);
-        if (difftimeCookie) {
-            _message.difftime = parseInt(difftimeCookie);
-        } else {
-            _message.send({wolf: 'TIME'});
-        }
-    };
-    self.openWebSocket = function() {
-        if ((window.MozWebSocket || window.WebSocket) && _context.webSocketServer) {
-            var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
-//初始化websocket
-            _message.send = function(msg) {
-                var that = this;
-                that.createSeed(msg);
-                var msgText = '{';
-                for (var name in msg) {
-                    msgText += '"' + name + '":"' + msg[name] + '",';
-                }
-                msgText = msgText.substr(0, msgText.length - 1);
-                msgText += '}';
-                if (that.webSocket && that.webSocket.readyState === 1) {
-                    that.webSocket.send(msgText);
-                    that.webSocket._logger.debug('sendMessage:' + msgText);
-                } else {
-                    if (that.webSocket && that.webSocket.readyState !== 1) {
-                        that.webSocket.close();
-                        delete that.webSocket;
-                    }
-                    that.webSocket = new Socket(_context.webSocketServer);
-                    that.webSocket._server = _context.webSocketServer;
-                    that.webSocket._logger = _logger;
-                    that.webSocket._event = _event;
-                    that.webSocket.onopen = function(event) {
-                        this._logger.debug('connect:' + this._server);
-                        this.send(msgText);
-                        this._logger.debug('sendMessage:' + msgText);
-                    };
-                    that.webSocket.onmessage = function(event) {
-                        this._logger.debug('onMessage:' + event.data);
-                        var res = eval('(' + event.data + ')');
-                        that.notify(res);
-                    };
-                    that.webSocket.onclose = function(event) {
-                        delete that.webSocket;
-                        this._logger.debug('close:' + this._server);
-                    };
-                    that.webSocket.onerror = function(event) {
-                        delete that.webSocket;
-                        this._logger.debug('error:' + this._server);
-                    };
-                }
-            };
         }
     };
     self.getMessage = function() {
@@ -608,6 +555,79 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     };
     self.getComponents = function() {
         return _components;
+    };
+    //
+    self.init = function(config, callback) {
+        //保存配置
+        this.setConfig(config);
+        //判断是否采用websocket通信
+        if (config.websocket && config.websocket === 'on') {
+            if ((window.MozWebSocket || window.WebSocket) && _context.webSocketServer) {
+                var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
+                //初始化websocket
+                _message.send = function(msg) {
+                    var that = this;
+                    that.createSeed(msg);
+                    var msgText = '{';
+                    for (var name in msg) {
+                        msgText += '"' + name + '":"' + msg[name] + '",';
+                    }
+                    msgText = msgText.substr(0, msgText.length - 1);
+                    msgText += '}';
+                    if (that.webSocket && that.webSocket.readyState === 1) {
+                        that.webSocket.send(msgText);
+                        that.webSocket._logger.debug('sendMessage:' + msgText);
+                    } else {
+                        if (that.webSocket && that.webSocket.readyState !== 1) {
+                            that.webSocket.close();
+                            delete that.webSocket;
+                        }
+                        that.webSocket = new Socket(_context.webSocketServer);
+                        that.webSocket._server = _context.webSocketServer;
+                        that.webSocket._logger = _logger;
+                        that.webSocket._event = _event;
+                        that.webSocket.onopen = function(event) {
+                            this._logger.debug('connect:' + this._server);
+                            this.send(msgText);
+                            this._logger.debug('sendMessage:' + msgText);
+                        };
+                        that.webSocket.onmessage = function(event) {
+                            this._logger.debug('onMessage:' + event.data);
+                            var res = eval('(' + event.data + ')');
+                            that.notify(res);
+                        };
+                        that.webSocket.onclose = function(event) {
+                            delete that.webSocket;
+                            this._logger.debug('close:' + this._server);
+                        };
+                        that.webSocket.onerror = function(event) {
+                            delete that.webSocket;
+                            this._logger.debug('error:' + this._server);
+                        };
+                    }
+                };
+            }
+        }
+        //初始化通信密钥
+        if (config.key) {
+            var keyArray = CryptoJS.enc.Hex.parse(config.key);
+            _message.desKey = CryptoJS.enc.Utf8.stringify(keyArray);
+            //检测cookie
+            var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
+            var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
+            var difftimeCookie = _cookie.getCookie(difftimeHex);
+            if (difftimeCookie) {
+                _message.difftime = parseInt(difftimeCookie);
+                callback();
+            } else {
+                //设置时间同步后回调初始化方法
+                this._timeInit = callback;
+                //同步时间
+                _message.send({wolf: 'TIME'});
+            }
+        } else {
+            callback();
+        }
     };
     //初始化事件响应
     _root.$this.click(function(event) {
