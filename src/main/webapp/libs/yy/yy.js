@@ -374,7 +374,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     //写入cookie
                     var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
                     var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
-                    _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 1});
+                    _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 30});
                 }
             }
         },
