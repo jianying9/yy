@@ -546,6 +546,9 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                             $this: $(this),
                             parent: component
                         });
+                        if(type !== 'skip') {
+                            _components.$this.removeClass('skip');
+                        }
                     });
                 }
                 _components._logger.debug('create component finished.type:' + ctx.type + ' key:' + key + ' id:' + id);
