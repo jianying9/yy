@@ -16,14 +16,14 @@ define('yy/config' ,['require'], function(require) {
     var self = {};
     //模块解析顺序
     model = {};
-    model.skip = ['skip', 'form', 'button', 'panel', 'label', 'list'];
-    model.module = ['skip', 'form', 'button', 'panel', 'label', 'list'];
-    model.form = ['skip', 'button', 'label'];
+    model.skip = ['form', 'button', 'panel', 'label', 'list', 'skip'];
+    model.module = ['form', 'button', 'panel', 'label', 'list', 'skip'];
+    model.form = ['button', 'label', 'skip'];
     model.button = [];
     model.label = [];
-    model.panel = ['skip', 'form', 'button', 'panel', 'label', 'list'];
+    model.panel = ['form', 'button', 'panel', 'label', 'list', 'skip'];
     model.list = ['list_item'];
-    model.list_item = ['skip', 'form', 'button', 'label', 'list'];
+    model.list_item = ['form', 'button', 'label', 'list', 'skip'];
     //
     self.model = model;
     return self;
@@ -960,6 +960,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     var _message = {
         difftime: 0,
         desKey: 'wolf2014',
+        sid: '-1',
         actions: {},
         _logger: _logger,
         listen: function(component, actionName, func) {
@@ -992,6 +993,9 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             if (res.act) {
                 var action = this.actions[res.act];
                 if (action) {
+                    if (res.sid) {
+                        this.sid = res.sid;
+                    }
                     var listener;
                     for (var id in action) {
                         listener = action[id];
@@ -1017,6 +1021,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             }
         },
         send: function(msg) {
+            msg.sid = this.sid;
             var that = this;
             that.createSeed(msg);
             $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
@@ -1172,11 +1177,14 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     var type = innerModels[index];
                     var $child = ctx.$this.children('.' + type);
                     $child.each(function() {
-                        _components.create({
+                        var result = _components.create({
                             type: type,
                             $this: $(this),
                             parent: component
                         });
+                        if (type !== 'skip') {
+                            result.$this.removeClass('skip');
+                        }
                     });
                 }
                 _components._logger.debug('create component finished.type:' + ctx.type + ' key:' + key + ' id:' + id);

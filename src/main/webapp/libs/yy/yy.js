@@ -329,6 +329,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     var _message = {
         difftime: 0,
         desKey: 'wolf2014',
+        sid: '-1',
         actions: {},
         _logger: _logger,
         listen: function(component, actionName, func) {
@@ -361,6 +362,9 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             if (res.act) {
                 var action = this.actions[res.act];
                 if (action) {
+                    if (res.sid) {
+                        this.sid = res.sid;
+                    }
                     var listener;
                     for (var id in action) {
                         listener = action[id];
@@ -386,6 +390,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             }
         },
         send: function(msg) {
+            msg.sid = this.sid;
             var that = this;
             that.createSeed(msg);
             $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
@@ -541,13 +546,13 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     var type = innerModels[index];
                     var $child = ctx.$this.children('.' + type);
                     $child.each(function() {
-                        _components.create({
+                        var result = _components.create({
                             type: type,
                             $this: $(this),
                             parent: component
                         });
-                        if(type !== 'skip') {
-                            _components.$this.removeClass('skip');
+                        if (type !== 'skip') {
+                            result.$this.removeClass('skip');
                         }
                     });
                 }
