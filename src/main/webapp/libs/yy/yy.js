@@ -268,7 +268,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                 value = data[name];
                 if (!value || value === '') {
                     result = false;
-                    config[name].faliure();
+                    config[name].failure();
                     break;
                 } else {
                     config[name].success();
