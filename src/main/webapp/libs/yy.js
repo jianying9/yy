@@ -152,18 +152,21 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
         if (parameters.scroll === 'true') {
             //可以拥有滚动条
             _extend.scroll = 'true';
+            _extend.scrollSpeed = 100;
             var id = _index.nextIndex();
             var scrollHtml = '<div id="' + id + '" class="scroll"></div>';
             component.$this.append(scrollHtml);
             var $scroll = $('#' + id);
             _extend.$scroll = $scroll;
+            _extend.scrollTopEventHandler = null;
+            _extend.scrollBottomEventHandler = null;
             //绑定滚动事件
             _event.bind(component, 'mousewheel', function(com, event, delta, deltaX, deltaY) {
                 if (com._extend.scroll === 'true') {
                     var scrollHeight = com.$this[0].scrollHeight;
                     var clientHeight = com.$this[0].clientHeight;
                     if (clientHeight < scrollHeight) {
-                        var speed = 50;
+                        var speed = com._extend.scrollSpeed;
                         var top = com.$this.scrollTop();
                         if (delta > 0) {
                             speed = -speed;
@@ -171,9 +174,17 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                         var newTop = top + speed;
                         if (newTop > scrollHeight - clientHeight) {
                             newTop = scrollHeight - clientHeight;
+                            //滚动到底部
+                            if(com._extend.scrollBottomEventHandler) {
+                                com._extend.scrollBottomEventHandler(com);
+                            }
                         }
                         if (newTop < 0) {
                             newTop = 0;
+                            //滚动到头部
+                            if(com._extend.scrollTopEventHandler) {
+                                com._extend.scrollTopEventHandler(com);
+                            }
                         }
                         com._utils.scrollTop(newTop, com);
                         com.$this.scrollTop(newTop);
@@ -241,6 +252,11 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             this._extend.key = config.key;
             this._extend.itemClazz = config.itemClazz;
             this._extend.itemCompleted = config.itemCompleted;
+            this._extend.scrollTopEventHandler = config.scrollTopEventHandler;
+            this._extend.scrollBottomEventHandler = config.scrollBottomEventHandler;
+            if(config.scrollSpeed) {
+                this._extend.scrollSpeed = config.scrollSpeed;
+            }
         };
         component.check = function() {
             if (!this._extend.key) {
