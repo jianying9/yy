@@ -38,14 +38,14 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                         if (newTop > scrollHeight - clientHeight) {
                             newTop = scrollHeight - clientHeight;
                             //滚动到底部
-                            if(com._extend.scrollBottomEventHandler) {
+                            if (com._extend.scrollBottomEventHandler) {
                                 com._extend.scrollBottomEventHandler(com);
                             }
                         }
                         if (newTop < 0) {
                             newTop = 0;
                             //滚动到头部
-                            if(com._extend.scrollTopEventHandler) {
+                            if (com._extend.scrollTopEventHandler) {
                                 com._extend.scrollTopEventHandler(com);
                             }
                         }
@@ -53,6 +53,10 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                         com.$this.scrollTop(newTop);
                     } else {
                         com._extend.$scroll.css({height: 0});
+                        //滚动到头部
+                        if (com._extend.scrollTopEventHandler) {
+                            com._extend.scrollTopEventHandler(com);
+                        }
                     }
                 }
             });
@@ -117,7 +121,7 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             this._extend.itemCompleted = config.itemCompleted;
             this._extend.scrollTopEventHandler = config.scrollTopEventHandler;
             this._extend.scrollBottomEventHandler = config.scrollBottomEventHandler;
-            if(config.scrollSpeed) {
+            if (config.scrollSpeed) {
                 this._extend.scrollSpeed = config.scrollSpeed;
             }
         };
