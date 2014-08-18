@@ -31,7 +31,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     var el = document.compatMode === "CSS1Compat" ? document.documentElement : document.body;
     var _context = {
         httpServer: 'http://127.0.0.1/service.io',
-        webSocketServer: '',
+        webSocketServer: 'ws://127.0.0.1/service.io',
         logLevel: 4,
         bodyWidth: el.clientWidth,
         bodyHeight: el.clientHeight - 1,
@@ -371,7 +371,13 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         listener.func(listener.target, res);
                     }
                 }
-            } else {
+            }
+        },
+        send: function(msg) {
+            msg.sid = this.sid;
+            var that = this;
+            that.createSeed(msg);
+            $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
                 if (res.wolf && res.wolf === 'TIME') {
                     //时间同步
                     var clientTime = (new Date()).getTime();
@@ -386,16 +392,29 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         timeInit();
                         delete self._timeInit;
                     }
+                } else {
+                    that.notify(res);
                 }
-            }
-        },
-        send: function(msg) {
-            msg.sid = this.sid;
-            var that = this;
-            that.createSeed(msg);
-            $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
-                that.notify(res);
             });
+        },
+        startComet: function() {
+            var that = this;
+            var getPushMessage = function() {
+                $.getJSON("_context.httpServer + '?callback=?'", {wolf: 'PUSH'}, function(res) {
+                    //PUSH STOP
+                    if (res.wolf) {
+                        if (res.wolf === 'PUSH_TIMEOUT') {
+                            getPushMessage();
+                        }
+                    } else {
+                        if (res.state && res.act) {
+                            that.notify(res);
+                            getPushMessage();
+                        }
+                    }
+                });
+            };
+            getPushMessage();
         }
     };
     self.getMessage = function() {
@@ -614,6 +633,9 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         };
                     }
                 };
+                //websocket不需要comet推送
+                _message.startComet = function() {
+                };
             }
         }
         //初始化通信密钥
@@ -725,20 +747,5 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             }
         }
     });
-//    _root.$this.keyup(function(event) {
-//        var target = event.target;
-//        while (target.id === '') {
-//            target = target.parentNode;
-//        }
-//        var targetId = target.id;
-//        var component = _components.findById(targetId);
-//        if (component) {
-//            var func = _event.keyup[component.id];
-//            if (func) {
-//                func(component, event);
-//            }
-//        }
-//    });
-//返回
     return self;
 });
