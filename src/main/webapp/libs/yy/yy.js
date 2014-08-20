@@ -284,12 +284,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     var _event = {
         click: {},
         dbclick: {},
-        mousedown: {},
-        mouseup: {},
-        mousemove: {},
-        mousewheel: {},
         keydown: {},
-//        keyup: {},
         bind: function(component, type, func) {
             if (this[type]) {
                 this[type][component.id] = func;
@@ -305,12 +300,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             } else {
                 delete this.click[id];
                 delete this.dbclick[id];
-                delete this.mousedown[id];
-                delete this.mouseup[id];
-                delete this.mousemove[id];
-                delete this.mousewheel[id];
                 delete this.keydown[id];
-//                delete this.keyup[id];
             }
         },
         getFunc: function(component, type) {
@@ -371,13 +361,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         listener.func(listener.target, res);
                     }
                 }
-            }
-        },
-        send: function(msg) {
-            msg.sid = this.sid;
-            var that = this;
-            that.createSeed(msg);
-            $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
+            } else {
                 if (res.wolf && res.wolf === 'TIME') {
                     //时间同步
                     var clientTime = (new Date()).getTime();
@@ -392,9 +376,15 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         timeInit();
                         delete self._timeInit;
                     }
-                } else {
-                    that.notify(res);
                 }
+            }
+        },
+        send: function(msg) {
+            msg.sid = this.sid;
+            var that = this;
+            that.createSeed(msg);
+            $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
+                that.notify(res);
             });
         },
         startComet: function() {
@@ -685,51 +675,6 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             var func = _event.dbclick[component.id];
             if (func) {
                 func(component, event);
-            }
-        }
-    });
-    _root.$this.mousedown(function(event) {
-        var target = event.target;
-        while (target.id === '') {
-            target = target.parentNode;
-        }
-        var targetId = target.id;
-        var component = _components.findById(targetId);
-        if (component) {
-            var func = _event.mousedown[component.id];
-            if (func) {
-                func(component, event);
-            }
-        }
-    });
-    _root.$this.mouseup(function(event) {
-        var target = event.target;
-        while (target.id === '') {
-            target = target.parentNode;
-        }
-        var targetId = target.id;
-        var component = _components.findById(targetId);
-        if (component) {
-            var func = _event.mouseup[component.id];
-            if (func) {
-                func(component, event);
-            }
-        }
-    });
-    _root.$this.mousewheel(function(event, delta, deltaX, deltaY) {
-        var target = event.target;
-        while (target.id === '') {
-            target = target.parentNode;
-        }
-        var targetId = target.id;
-        var component = _components.findById(targetId);
-        while (component) {
-            var func = _event.mousewheel[component.id];
-            if (func) {
-                func(component, event, delta, deltaX, deltaY);
-                break;
-            } else {
-                component = component.parent;
             }
         }
     });

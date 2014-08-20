@@ -2,7 +2,6 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
     var _yy = require('yy/yy');
     var _index = _yy.getIndex();
     var _utils = _yy.getUtils();
-    var _event = _yy.getEvent();
     var _components = _yy.getComponents();
     var self = {};
     self.parameters = ['scroll'];
@@ -24,13 +23,13 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             _extend.scrollTopEventHandler = null;
             _extend.scrollBottomEventHandler = null;
             //绑定滚动事件
-            _event.bind(component, 'mousewheel', function(com, event, delta, deltaX, deltaY) {
-                if (com._extend.scroll === 'true') {
-                    var scrollHeight = com.$this[0].scrollHeight;
-                    var clientHeight = com.$this[0].clientHeight;
+            component.$this.mousewheel(function(event, delta, deltaX, deltaY) {
+                if (component._extend.scroll === 'true') {
+                    var scrollHeight = component.$this[0].scrollHeight;
+                    var clientHeight = component.$this[0].clientHeight;
                     if (clientHeight < scrollHeight) {
-                        var speed = com._extend.scrollSpeed;
-                        var top = com.$this.scrollTop();
+                        var speed = component._extend.scrollSpeed;
+                        var top = component.$this.scrollTop();
                         if (delta > 0) {
                             speed = -speed;
                         }
@@ -38,24 +37,24 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                         if (newTop > scrollHeight - clientHeight) {
                             newTop = scrollHeight - clientHeight;
                             //滚动到底部
-                            if (com._extend.scrollBottomEventHandler) {
-                                com._extend.scrollBottomEventHandler(com);
+                            if (component._extend.scrollBottomEventHandler) {
+                                component._extend.scrollBottomEventHandler(component);
                             }
                         }
                         if (newTop < 0) {
                             newTop = 0;
                             //滚动到头部
-                            if (com._extend.scrollTopEventHandler) {
-                                com._extend.scrollTopEventHandler(com);
+                            if (component._extend.scrollTopEventHandler) {
+                                component._extend.scrollTopEventHandler(component);
                             }
                         }
-                        com._utils.scrollTop(newTop, com);
-                        com.$this.scrollTop(newTop);
+                        component._utils.scrollTop(newTop, component);
+                        component.$this.scrollTop(newTop);
                     } else {
-                        com._extend.$scroll.css({height: 0});
+                        component._extend.$scroll.css({height: 0});
                         //滚动到头部
-                        if (com._extend.scrollTopEventHandler) {
-                            com._extend.scrollTopEventHandler(com);
+                        if (component._extend.scrollTopEventHandler) {
+                            component._extend.scrollTopEventHandler(component);
                         }
                     }
                 }

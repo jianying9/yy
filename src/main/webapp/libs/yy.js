@@ -139,7 +139,6 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
     var _yy = require('yy/yy');
     var _index = _yy.getIndex();
     var _utils = _yy.getUtils();
-    var _event = _yy.getEvent();
     var _components = _yy.getComponents();
     var self = {};
     self.parameters = ['scroll'];
@@ -161,13 +160,13 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             _extend.scrollTopEventHandler = null;
             _extend.scrollBottomEventHandler = null;
             //绑定滚动事件
-            _event.bind(component, 'mousewheel', function(com, event, delta, deltaX, deltaY) {
-                if (com._extend.scroll === 'true') {
-                    var scrollHeight = com.$this[0].scrollHeight;
-                    var clientHeight = com.$this[0].clientHeight;
+            component.$this.mousewheel(function(event, delta, deltaX, deltaY) {
+                if (component._extend.scroll === 'true') {
+                    var scrollHeight = component.$this[0].scrollHeight;
+                    var clientHeight = component.$this[0].clientHeight;
                     if (clientHeight < scrollHeight) {
-                        var speed = com._extend.scrollSpeed;
-                        var top = com.$this.scrollTop();
+                        var speed = component._extend.scrollSpeed;
+                        var top = component.$this.scrollTop();
                         if (delta > 0) {
                             speed = -speed;
                         }
@@ -175,24 +174,24 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                         if (newTop > scrollHeight - clientHeight) {
                             newTop = scrollHeight - clientHeight;
                             //滚动到底部
-                            if (com._extend.scrollBottomEventHandler) {
-                                com._extend.scrollBottomEventHandler(com);
+                            if (component._extend.scrollBottomEventHandler) {
+                                component._extend.scrollBottomEventHandler(component);
                             }
                         }
                         if (newTop < 0) {
                             newTop = 0;
                             //滚动到头部
-                            if (com._extend.scrollTopEventHandler) {
-                                com._extend.scrollTopEventHandler(com);
+                            if (component._extend.scrollTopEventHandler) {
+                                component._extend.scrollTopEventHandler(component);
                             }
                         }
-                        com._utils.scrollTop(newTop, com);
-                        com.$this.scrollTop(newTop);
+                        component._utils.scrollTop(newTop, component);
+                        component.$this.scrollTop(newTop);
                     } else {
-                        com._extend.$scroll.css({height: 0});
+                        component._extend.$scroll.css({height: 0});
                         //滚动到头部
-                        if (com._extend.scrollTopEventHandler) {
-                            com._extend.scrollTopEventHandler(com);
+                        if (component._extend.scrollTopEventHandler) {
+                            component._extend.scrollTopEventHandler(component);
                         }
                     }
                 }
@@ -579,7 +578,6 @@ define('yy/panel', ['require', 'yy/yy'], function(require) {
     var _yy = require('yy/yy');
     var _index = _yy.getIndex();
     var _utils = _yy.getUtils();
-    var _event = _yy.getEvent();
     var self = {};
     self.parameters = ['scroll'];
     self.create = function(component, parameters) {
@@ -589,31 +587,46 @@ define('yy/panel', ['require', 'yy/yy'], function(require) {
         if (parameters.scroll === 'true') {
             //可以拥有滚动条
             _extend.scroll = 'true';
+            _extend.scrollSpeed = 100;
             var id = _index.nextIndex();
             var scrollHtml = '<div id="' + id + '" class="scroll"></div>';
             component.$this.append(scrollHtml);
             var $scroll = $('#' + id);
             _extend.$scroll = $scroll;
             //绑定滚动事件
-            _event.bind(component, 'mousewheel', function(com, event, delta, deltaX, deltaY) {
-                if (com._extend.scroll === 'true') {
-                    var scrollHeight = com.$this[0].scrollHeight;
-                    var clientHeight = com.$this[0].clientHeight;
+            component.$this.mousewheel(function(event, delta, deltaX, deltaY) {
+                if (component._extend.scroll === 'true') {
+                    var scrollHeight = component.$this[0].scrollHeight;
+                    var clientHeight = component.$this[0].clientHeight;
                     if (clientHeight < scrollHeight) {
-                        var speed = 50;
-                        var top = com.$this.scrollTop();
+                        var speed = component._extend.scrollSpeed;
+                        var top = component.$this.scrollTop();
                         if (delta > 0) {
                             speed = -speed;
                         }
                         var newTop = top + speed;
                         if (newTop > scrollHeight - clientHeight) {
                             newTop = scrollHeight - clientHeight;
+                            //滚动到底部
+                            if (component._extend.scrollBottomEventHandler) {
+                                component._extend.scrollBottomEventHandler(component);
+                            }
                         }
                         if (newTop < 0) {
                             newTop = 0;
+                            //滚动到头部
+                            if (component._extend.scrollTopEventHandler) {
+                                component._extend.scrollTopEventHandler(component);
+                            }
                         }
-                        com._utils.scrollTop(newTop, com);
-                        com.$this.scrollTop(newTop);
+                        component._utils.scrollTop(newTop, component);
+                        component.$this.scrollTop(newTop);
+                    } else {
+                        component._extend.$scroll.css({height: 0});
+                        //滚动到头部
+                        if (component._extend.scrollTopEventHandler) {
+                            component._extend.scrollTopEventHandler(component);
+                        }
                     }
                 }
             });
@@ -643,6 +656,13 @@ define('yy/panel', ['require', 'yy/yy'], function(require) {
                 var $this = this.$this;
                 this._utils.scrollTop(0, this);
                 $this.scrollTop(0);
+            }
+        };
+        component.init = function(config) {
+            this._extend.scrollTopEventHandler = config.scrollTopEventHandler;
+            this._extend.scrollBottomEventHandler = config.scrollBottomEventHandler;
+            if (config.scrollSpeed) {
+                this._extend.scrollSpeed = config.scrollSpeed;
             }
         };
         return component;
@@ -682,7 +702,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     var el = document.compatMode === "CSS1Compat" ? document.documentElement : document.body;
     var _context = {
         httpServer: 'http://127.0.0.1/service.io',
-        webSocketServer: '',
+        webSocketServer: 'ws://127.0.0.1/service.io',
         logLevel: 4,
         bodyWidth: el.clientWidth,
         bodyHeight: el.clientHeight - 1,
@@ -935,12 +955,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     var _event = {
         click: {},
         dbclick: {},
-        mousedown: {},
-        mouseup: {},
-        mousemove: {},
-        mousewheel: {},
         keydown: {},
-//        keyup: {},
         bind: function(component, type, func) {
             if (this[type]) {
                 this[type][component.id] = func;
@@ -956,12 +971,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             } else {
                 delete this.click[id];
                 delete this.dbclick[id];
-                delete this.mousedown[id];
-                delete this.mouseup[id];
-                delete this.mousemove[id];
-                delete this.mousewheel[id];
                 delete this.keydown[id];
-//                delete this.keyup[id];
             }
         },
         getFunc: function(component, type) {
@@ -1047,6 +1057,25 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
                 that.notify(res);
             });
+        },
+        startComet: function() {
+            var that = this;
+            var getPushMessage = function() {
+                $.getJSON("_context.httpServer + '?callback=?'", {wolf: 'PUSH'}, function(res) {
+                    //PUSH STOP
+                    if (res.wolf) {
+                        if (res.wolf === 'PUSH_TIMEOUT') {
+                            getPushMessage();
+                        }
+                    } else {
+                        if (res.state && res.act) {
+                            that.notify(res);
+                            getPushMessage();
+                        }
+                    }
+                });
+            };
+            getPushMessage();
         }
     };
     self.getMessage = function() {
@@ -1265,6 +1294,9 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         };
                     }
                 };
+                //websocket不需要comet推送
+                _message.startComet = function() {
+                };
             }
         }
         //初始化通信密钥
@@ -1317,51 +1349,6 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             }
         }
     });
-    _root.$this.mousedown(function(event) {
-        var target = event.target;
-        while (target.id === '') {
-            target = target.parentNode;
-        }
-        var targetId = target.id;
-        var component = _components.findById(targetId);
-        if (component) {
-            var func = _event.mousedown[component.id];
-            if (func) {
-                func(component, event);
-            }
-        }
-    });
-    _root.$this.mouseup(function(event) {
-        var target = event.target;
-        while (target.id === '') {
-            target = target.parentNode;
-        }
-        var targetId = target.id;
-        var component = _components.findById(targetId);
-        if (component) {
-            var func = _event.mouseup[component.id];
-            if (func) {
-                func(component, event);
-            }
-        }
-    });
-    _root.$this.mousewheel(function(event, delta, deltaX, deltaY) {
-        var target = event.target;
-        while (target.id === '') {
-            target = target.parentNode;
-        }
-        var targetId = target.id;
-        var component = _components.findById(targetId);
-        while (component) {
-            var func = _event.mousewheel[component.id];
-            if (func) {
-                func(component, event, delta, deltaX, deltaY);
-                break;
-            } else {
-                component = component.parent;
-            }
-        }
-    });
     _root.$this.keydown(function(event) {
         var target = event.target;
         while (target.id === '') {
@@ -1376,20 +1363,5 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             }
         }
     });
-//    _root.$this.keyup(function(event) {
-//        var target = event.target;
-//        while (target.id === '') {
-//            target = target.parentNode;
-//        }
-//        var targetId = target.id;
-//        var component = _components.findById(targetId);
-//        if (component) {
-//            var func = _event.keyup[component.id];
-//            if (func) {
-//                func(component, event);
-//            }
-//        }
-//    });
-//返回
     return self;
 });
