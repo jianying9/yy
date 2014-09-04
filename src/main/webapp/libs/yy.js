@@ -803,8 +803,11 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             return cookieValue;
         }
     };
-    self.getCookie = function() {
-        return _cookie;
+    self.getCookie = function(name) {
+        return _cookie.getCookie(name);
+    };
+    self.setCookie = function(key, value, options) {
+        _cookie.setCookie(key, value, options);
     };
     //session对象
     var _session = {};
@@ -820,6 +823,48 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         for (var name in _session) {
             delete _session[name];
         }
+    };
+    //定时任务
+    var _timerTaskManager = {
+        _index: _index,
+        _logger: _logger,
+        _taskQueue: {},
+        submitTask: function(task) {
+            var id = this._index.nextIndex();
+            if (!task.nextTime || task.nextTime < 1) {
+                task.nextTime = 10;
+            }
+            this._taskQueue[id] = task;
+        },
+        start: function() {
+            var task;
+            var complete;
+            for (var id in this._taskQueue) {
+                task = this._taskQueue[id];
+                if (task.message) {
+                    this._logger.debug(task.message);
+                }
+                task.nextTime--;
+                if (task.nextTime === 0) {
+                    //时间倒计时为0，开始执行
+                    complete = task.execute();
+                    if (complete) {
+                        delete this._taskQueue[id];
+                    }
+                }
+            }
+        }
+    };
+    //执行定时任务，最小周期为0.1秒
+    setInterval(function() {
+        try {
+            _timerTaskManager.start();
+        } catch (e) {
+            _logger.error('timer error' + e);
+        }
+    }, 100);
+    self.submitTimerTask = function(timerTask) {
+        _timerTaskManager.submitTask(timerTask);
     };
     //根对象
     var rootId = _index.nextIndex();
@@ -1040,7 +1085,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     //写入cookie
                     var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
                     var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
-                    _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 30});
+                    _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 1});
                     //判断是否有时间同步回调方法
                     var timeInit = self._timeInit;
                     if (timeInit) {
