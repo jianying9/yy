@@ -1106,7 +1106,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         startComet: function() {
             var that = this;
             var getPushMessage = function() {
-                $.getJSON("_context.httpServer + '?callback=?'", {wolf: 'PUSH'}, function(res) {
+                $.getJSON(_context.httpServer + '?callback=?', {wolf: 'PUSH', sid: that.sid}, function(res) {
                     //PUSH STOP
                     if (res.wolf) {
                         if (res.wolf === 'PUSH_TIMEOUT') {
