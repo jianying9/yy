@@ -1107,6 +1107,16 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             msg.seed = seed;
         },
         notify: function(res) {
+            //DENIED状态处理
+            if (res.state === 'DENIED' && res.error) {
+                //请求加密验证时间间隔异常，重新同步时间
+                var clientTime = (new Date()).getTime();
+                this.difftime = res.error - clientTime;
+                //写入cookie
+                var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
+                var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
+                _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 1});
+            }
             if (res.act) {
                 var action = this.actions[res.act];
                 if (action) {
