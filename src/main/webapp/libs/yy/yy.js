@@ -82,12 +82,13 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         _logger.error = function(msg) {
         };
     }
+    var _key = 'wolf2014';
     //获取url参数
     self.getUrlPara = function() {
         var result = {};
         var text = window.location.search;
-        var num = text.indexOf('?');
-        text = text.substr(num + 1);
+        var index = text.indexOf('?');
+        text = text.substr(index + 1, text.length);
         var paraArr = text.split('&');
         var para;
         for (var index = 0; index < paraArr.length; index++) {
@@ -152,6 +153,47 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         for (var name in _session) {
             delete _session[name];
         }
+    };
+    //初始session
+    var urlParas = self.getUrlPara();
+    if (urlParas._s) {
+        var _s = decodeURIComponent(urlParas._s);
+        var keyHex = CryptoJS.enc.Utf8.parse(_key);
+        var s = CryptoJS.DES.decrypt(_s, keyHex, {iv: keyHex});
+        s = CryptoJS.enc.Utf8.stringify(s);
+        var session = eval('(' + s + ')');
+        self.setSession(session);
+    }
+    //打开新页面
+    self.openUrl = function(url) {
+        //session加密
+        var s = '{';
+        for (var name in _session) {
+            s += '"' + name + '":"' + _session[name] + '",';
+        }
+        s = s.substr(0, s.length - 1);
+        s += '}';
+        var keyHex = CryptoJS.enc.Utf8.parse(_key);
+        var es = CryptoJS.DES.encrypt(s, keyHex, {iv: keyHex});
+        var base64 = CryptoJS.format.OpenSSL.stringify(es);
+        //重写url
+        var index = url.indexOf('?');
+        var u = url.substring(0, index);
+        var p = url.substring(index + 1, url.length);
+        var paraArr = p.split('&');
+        var para;
+        var paras = {};
+        for (var index = 0; index < paraArr.length; index++) {
+            para = paraArr[index].split('=');
+            paras[para[0]] = para[1];
+        }
+        paras._s = encodeURIComponent(base64);
+        u += '?';
+        for (var name in paras) {
+            u += name + '=' + paras[name] + '&';
+        }
+        u = u.substring(0, u.length - 1);
+        window.open(u);
     };
     //定时任务
     var _timerTaskManager = {
@@ -363,7 +405,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     //message消息管理对象
     var _message = {
         difftime: 0,
-        desKey: 'wolf2014',
+        desKey: _key,
         sid: '-1',
         actions: {},
         _logger: _logger,
