@@ -117,4 +117,41 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>product</id>
+            <build>
+                <finalName>yy</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.cargo</groupId>
+                        <artifactId>cargo-maven2-plugin</artifactId>
+                        <version>1.4.9</version>
+                        <configuration>
+                            <container>
+                                <containerId>glassfish3x</containerId>
+                                <type>remote</type>
+                            </container>
+                            <configuration>
+                                <type>runtime</type>
+                                <properties>
+                                    <cargo.hostname>10.123.243.232</cargo.hostname>
+                                    <cargo.remote.username>admin</cargo.remote.username>
+                                    <cargo.remote.password>nd.com.cn..pw..ljy</cargo.remote.password>
+                                </properties>
+                            </configuration>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.glassfish.deployment</groupId>
+                                <artifactId>deployment-client</artifactId>
+                                <version>3.2-b06</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
 </project>
