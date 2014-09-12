@@ -52,34 +52,36 @@ define('yy/module', ['require', 'yy/yy'], function(require) {
     var _components = _yy.getComponents();
     //模块加载moduleLoader
     self.loadModule = function(moduleId, callback, loader) {
+        _components.init();
         if (!loader) {
             loader = _components.getRoot();
         }
         var component = _components.findChildByKey(loader, moduleId);
         if (component) {
-            if (callback) {
-                callback(component);
-            }
-        } else {
-            require([moduleId], function(module) {
-                var htmlUrl = 'text!' + moduleId + '.html';
-                require([htmlUrl], function(html) {
-                    loader.$this.append(html);
-                    var $this = $('#' + moduleId);
-                    var component = _components.create({
-                        type: 'module',
-                        $this: $this,
-                        parent: loader
-                    });
-                    if (module.init) {
-                        module.init(component);
-                    }
-                    if (callback) {
-                        callback(component);
-                    }
-                });
-            });
+            component.remove();
         }
+        require([moduleId], function(module) {
+            var htmlUrl = 'text!' + moduleId + '.html';
+            require([htmlUrl], function(html) {
+                loader.$this.append(html);
+                var $this = $('#' + moduleId);
+                var component = _components.create({
+                    type: 'module',
+                    $this: $this,
+                    parent: loader
+                });
+                if (module.init) {
+                    module.init(component);
+                }
+                if (callback) {
+                    callback(component);
+                }
+            });
+        });
+    };
+    //初始化root模块
+    self.initModule = function(callback) {
+        _components.init(callback);
     };
     return self;
 });

@@ -543,34 +543,36 @@ define('yy/module', ['require', 'yy/yy'], function(require) {
     var _components = _yy.getComponents();
     //模块加载moduleLoader
     self.loadModule = function(moduleId, callback, loader) {
+        _components.init();
         if (!loader) {
             loader = _components.getRoot();
         }
         var component = _components.findChildByKey(loader, moduleId);
         if (component) {
-            if (callback) {
-                callback(component);
-            }
-        } else {
-            require([moduleId], function(module) {
-                var htmlUrl = 'text!' + moduleId + '.html';
-                require([htmlUrl], function(html) {
-                    loader.$this.append(html);
-                    var $this = $('#' + moduleId);
-                    var component = _components.create({
-                        type: 'module',
-                        $this: $this,
-                        parent: loader
-                    });
-                    if (module.init) {
-                        module.init(component);
-                    }
-                    if (callback) {
-                        callback(component);
-                    }
-                });
-            });
+            component.remove();
         }
+        require([moduleId], function(module) {
+            var htmlUrl = 'text!' + moduleId + '.html';
+            require([htmlUrl], function(html) {
+                loader.$this.append(html);
+                var $this = $('#' + moduleId);
+                var component = _components.create({
+                    type: 'module',
+                    $this: $this,
+                    parent: loader
+                });
+                if (module.init) {
+                    module.init(component);
+                }
+                if (callback) {
+                    callback(component);
+                }
+            });
+        });
+    };
+    //初始化root模块
+    self.initModule = function(callback) {
+        _components.init(callback);
     };
     return self;
 });
@@ -676,6 +678,7 @@ define('yy/panel', ['require', 'yy/yy'], function(require) {
 define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) {
 //require用于依赖加载
     var self = {};
+    var _config = require('yy/config');
     //浏览器信息
     var _browser = {};
     _browser.mozilla = /firefox/.test(navigator.userAgent.toLowerCase());
@@ -708,8 +711,6 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         bodyHeight: el.clientHeight - 1,
         version: 1
     };
-    var $body = $('body');
-    $body.css({height: _context.bodyHeight});
     self.setConfig = function(config) {
         for (var name in config) {
             _context[name] = config[name];
@@ -835,36 +836,69 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         var session = eval('(' + s + ')');
         self.setSession(session);
     }
-    //打开新页面
-    self.openUrl = function(url) {
+    //创建带session的url，获取boolean,string,number类型的session信息
+    self.createUrl = function(url) {
         //session加密
+        var type;
+        var hasSession = false;
         var s = '{';
         for (var name in _session) {
-            s += '"' + name + '":"' + _session[name] + '",';
+            type = typeof(_session[name]);
+            switch (type) {
+                case 'boolean':
+                    s += '"' + name + '":' + _session[name] + ',';
+                    hasSession = true;
+                    break;
+                case 'number':
+                    s += '"' + name + '":' + _session[name] + ',';
+                    hasSession = true;
+                    break;
+                case 'string':
+                    s += '"' + name + '":"' + _session[name] + '",';
+                    hasSession = true;
+                    break;
+            }
         }
-        s = s.substr(0, s.length - 1);
+        if (hasSession) {
+            s = s.substr(0, s.length - 1);
+        }
         s += '}';
         var keyHex = CryptoJS.enc.Utf8.parse(_key);
         var es = CryptoJS.DES.encrypt(s, keyHex, {iv: keyHex});
         var base64 = CryptoJS.format.OpenSSL.stringify(es);
         //重写url
+        var u;
         var index = url.indexOf('?');
-        var u = url.substring(0, index);
-        var p = url.substring(index + 1, url.length);
-        var paraArr = p.split('&');
-        var para;
-        var paras = {};
-        for (var index = 0; index < paraArr.length; index++) {
-            para = paraArr[index].split('=');
-            paras[para[0]] = para[1];
+        if (index > 0) {
+            u = url.substring(0, index);
+            var p = url.substring(index + 1, url.length);
+            var paraArr = p.split('&');
+            var para;
+            var paras = {};
+            for (var index = 0; index < paraArr.length; index++) {
+                para = paraArr[index].split('=');
+                paras[para[0]] = para[1];
+            }
+            paras._s = encodeURIComponent(base64);
+            u += '?';
+            for (var name in paras) {
+                u += name + '=' + paras[name] + '&';
+            }
+            u = u.substring(0, u.length - 1);
+        } else {
+            u = url + '?_s=' + encodeURIComponent(base64);
         }
-        paras._s = encodeURIComponent(base64);
-        u += '?';
-        for (var name in paras) {
-            u += name + '=' + paras[name] + '&';
-        }
-        u = u.substring(0, u.length - 1);
+        return u;
+    };
+    //打开新页面
+    self.openUrl = function(url) {
+        var u = this.createUrl(url);
         window.open(u);
+    };
+    //改变页面
+    self.changeUrl = function(url) {
+        var u = this.createUrl(url);
+        window.location.href = u;
     };
     //定时任务
     var _timerTaskManager = {
@@ -907,20 +941,6 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     }, 100);
     self.submitTimerTask = function(timerTask) {
         _timerTaskManager.submitTask(timerTask);
-    };
-    //根对象
-    var rootId = _index.nextIndex();
-    $body.attr({
-        id: rootId
-//        onselectstart: "return false"
-    });
-    var _root = {
-        type: 'root',
-        id: rootId,
-        key: 'root',
-        $this: $body,
-        children: {},
-        extend: {}
     };
     //utils创建工具对象
     var _utils = {
@@ -1077,7 +1097,6 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     var _message = {
         difftime: 0,
         desKey: _key,
-        sid: '-1',
         actions: {},
         _logger: _logger,
         listen: function(component, actionName, func) {
@@ -1121,7 +1140,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                 var action = this.actions[res.act];
                 if (action) {
                     if (res.sid) {
-                        this.sid = res.sid;
+                        _session.sid = res.sid;
                     }
                     var listener;
                     for (var id in action) {
@@ -1148,7 +1167,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             }
         },
         send: function(msg) {
-            msg.sid = this.sid;
+            msg.sid = _session.sid;
             var that = this;
             that.createSeed(msg);
             $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
@@ -1158,7 +1177,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         startComet: function() {
             var that = this;
             var getPushMessage = function() {
-                $.getJSON(_context.httpServer + '?callback=?', {wolf: 'PUSH', sid: that.sid}, function(res) {
+                $.getJSON(_context.httpServer + '?callback=?', {wolf: 'PUSH', sid: _session.sid}, function(res) {
                     //PUSH STOP
                     if (res.wolf) {
                         if (res.wolf === 'PUSH_TIMEOUT') {
@@ -1178,14 +1197,34 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     self.getMessage = function() {
         return _message;
     };
+    //初始化body
+    var $body = $('body');
+    $body.attr({
+        id: 'root',
+        type: 'module'
+    });
     //components组建对象管理
     var _components = {
-        _root: _root,
+        _init: false,
+        _root: {},
         _logger: _logger,
         _index: _index,
         _utils: _utils,
         _event: _event,
         _message: _message,
+        init: function(callback) {
+            if (!this._init) {
+                this._root = this.create({
+                    type: 'module',
+                    $this: $body,
+                    parent: null
+                });
+                this._init = true;
+                if (callback) {
+                    callback(this._root);
+                }
+            }
+        },
         getRoot: function() {
             return this._root;
         },
@@ -1234,12 +1273,11 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             return result;
         },
         create: function(ctx) {
-            var config = require('./config');
             var _components = this;
             var parent = ctx.parent;
             if (ctx.type === 'skip') {
-//遍历所有子控件
-                var innerModels = config.model.skip;
+                //遍历所有子控件
+                var innerModels = _config.model.skip;
                 for (var index = 0; index < innerModels.length; index++) {
                     var type = innerModels[index];
                     var $child = ctx.$this.children('.' + type);
@@ -1264,8 +1302,10 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     _components: _components
                 };
                 component.$this.attr('id', id);
-                component.parent.children[id] = component;
-                var model = require('./' + ctx.type);
+                if (component.parent) {
+                    component.parent.children[id] = component;
+                }
+                var model = require('yy/' + ctx.type);
                 //读取配置参数
                 var parameters = {};
                 var attrName, attrValue;
@@ -1278,10 +1318,10 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                 model.create(component, parameters);
                 //组件固有方法
                 component.show = function() {
-                    this.$this.removeClass('hide');
+                    this.$this.show();
                 };
                 component.hide = function() {
-                    this.$this.addClass('hide');
+                    this.$this.hide();
                 };
                 component.isVisible = function() {
                     return this.$this.is(':visible');
@@ -1302,23 +1342,25 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     this.removeChildren();
                     _components._event.unbind(this);
                     _components._message.remove(this);
-                    delete this.parent.children[this.id];
                     this.$this.remove();
-                    //重新判断父节点的firstChild
-                    if (this.parent.firstChild === this) {
-                        this.parent.firstChild = null;
-                        for (var id in this.parent.children) {
-                            this.parent.firstChild = this.parent.children[id];
-                            break;
+                    if (this.parent) {
+                        delete this.parent.children[this.id];
+                        //重新判断父节点的firstChild
+                        if (this.parent.firstChild === this) {
+                            this.parent.firstChild = null;
+                            for (var id in this.parent.children) {
+                                this.parent.firstChild = this.parent.children[id];
+                                break;
+                            }
                         }
                     }
                 };
                 //修改parent的firstChild
-                if (!parent.firstChild) {
+                if (parent && !parent.firstChild) {
                     parent.firstChild = component;
                 }
                 //创建内部组件
-                var innerModels = config.model[ctx.type];
+                var innerModels = _config.model[ctx.type];
                 for (var index = 0; index < innerModels.length; index++) {
                     var type = innerModels[index];
                     var $child = ctx.$this.children('.' + type);
@@ -1418,45 +1460,51 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         }
     };
     //初始化事件响应
-    _root.$this.click(function(event) {
+    $body.click(function(event) {
         var target = event.target;
         while (target.id === '') {
             target = target.parentNode;
         }
-        var targetId = target.id;
-        var component = _components.findById(targetId);
-        if (component) {
-            var func = _event.click[component.id];
-            if (func) {
-                func(component, event);
+        if (target) {
+            var targetId = target.id;
+            var component = _components.findById(targetId);
+            if (component) {
+                var func = _event.click[component.id];
+                if (func) {
+                    func(component, event);
+                }
             }
         }
     });
-    _root.$this.dblclick(function(event) {
+    $body.dblclick(function(event) {
         var target = event.target;
         while (target.id === '') {
             target = target.parentNode;
         }
-        var targetId = target.id;
-        var component = _components.findById(targetId);
-        if (component) {
-            var func = _event.dbclick[component.id];
-            if (func) {
-                func(component, event);
+        if (target) {
+            var targetId = target.id;
+            var component = _components.findById(targetId);
+            if (component) {
+                var func = _event.dbclick[component.id];
+                if (func) {
+                    func(component, event);
+                }
             }
         }
     });
-    _root.$this.keydown(function(event) {
+    $body.keydown(function(event) {
         var target = event.target;
         while (target.id === '') {
             target = target.parentNode;
         }
-        var targetId = target.id;
-        var component = _components.findById(targetId);
-        if (component) {
-            var func = _event.keydown[component.id];
-            if (func) {
-                func(component, event);
+        if (target) {
+            var targetId = target.id;
+            var component = _components.findById(targetId);
+            if (component) {
+                var func = _event.keydown[component.id];
+                if (func) {
+                    func(component, event);
+                }
             }
         }
     });
