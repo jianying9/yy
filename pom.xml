@@ -15,6 +15,7 @@
     </properties>
 
     <build>
+        <finalName>yy</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -116,12 +117,10 @@
             </plugin>
         </plugins>
     </build>
-
     <profiles>
         <profile>
             <id>product</id>
             <build>
-                <finalName>yy</finalName>
                 <plugins>
                     <plugin>
                         <groupId>org.codehaus.cargo</groupId>
@@ -134,11 +133,6 @@
                             </container>
                             <configuration>
                                 <type>runtime</type>
-                                <properties>
-                                    <cargo.hostname>10.123.243.232</cargo.hostname>
-                                    <cargo.remote.username>admin</cargo.remote.username>
-                                    <cargo.remote.password>nd.com.cn..pw..ljy</cargo.remote.password>
-                                </properties>
                             </configuration>
                         </configuration>
                         <dependencies>
@@ -153,5 +147,4 @@
             </build>
         </profile>
     </profiles>
-    
 </project>
