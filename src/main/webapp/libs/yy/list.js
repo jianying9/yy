@@ -15,6 +15,9 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             //可以拥有滚动条
             _extend.scroll = 'true';
             _extend.scrollSpeed = 100;
+            _extend.move = false;
+            _extend.mouseStartY = 0;
+            _extend.topStart = 0;
             var id = _index.nextIndex();
             var scrollHtml = '<div id="' + id + '" class="scroll"></div>';
             component.$this.append(scrollHtml);
@@ -22,6 +25,61 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             _extend.$scroll = $scroll;
             _extend.scrollTopEventHandler = null;
             _extend.scrollBottomEventHandler = null;
+            //滚动条事件
+            //滚动条mousedown
+            $scroll.mousedown(function(event) {
+                $scroll.addClass('move');
+                _extend.move = true;
+                _extend.mouseStartY = event.pageY;
+                _extend.topStart = component.$this.scrollTop();
+                var _root = component._components.getRoot();
+                //绑定全局mousedown事件,当鼠标放开时，停止滚动
+                _root.$this.bind('mouseup', function(event) {
+                    $scroll.removeClass('move');
+                    _extend.move = false;
+                    _extend.mouseStartY = 0;
+                    _extend.topStart = 0;
+                    //允许选中
+                    _root.$this.unbind('selectstart').css({
+                        '-moz-user-select': 'text',
+                        '-webkit-user-select': 'text',
+                        '-ms-user-select': 'text',
+                        '-khtml-user-select': 'text',
+                        'user-select': 'text'
+                    });
+                    //解除mousemove,mouseup事件
+                    _root.$this.unbind('mousemove');
+                    _root.$this.unbind('mouseup');
+                });
+                //绑定全局mousemove,检测鼠标坐标的y轴变化，同步改变滚动条
+                _root.$this.bind('mousemove', function(event) {
+                    if (_extend.move) {
+                        var scrollHeight = component.$this[0].scrollHeight;
+                        var clientHeight = component.$this[0].clientHeight;
+                        if (clientHeight < scrollHeight) {
+                            var newTop = _extend.topStart + event.pageY - _extend.mouseStartY;
+                            if (newTop > scrollHeight - clientHeight) {
+                                newTop = scrollHeight - clientHeight;
+                            }
+                            if (newTop < 0) {
+                                newTop = 0;
+                            }
+                            component._utils.scrollTop(newTop, component);
+                            component.$this.scrollTop(newTop);
+                        }
+                    }
+                });
+                //禁止选中
+                _root.$this.bind('selectstart', function() {
+                    return false;
+                }).css({
+                    '-moz-user-select': 'none',
+                    '-webkit-user-select': 'none',
+                    '-ms-user-select': 'none',
+                    '-khtml-user-select': 'none',
+                    'user-select': 'none'
+                });
+            });
             //绑定滚动事件
             component.$this.mousewheel(function(event, delta, deltaX, deltaY) {
                 if (component._extend.scroll === 'true') {

@@ -533,7 +533,9 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     //components组建对象管理
     var _components = {
         _init: false,
-        _root: {},
+        _root: {
+            $this: $body
+        },
         _logger: _logger,
         _index: _index,
         _utils: _utils,
