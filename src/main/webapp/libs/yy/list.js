@@ -14,12 +14,11 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
         if (parameters.scroll === 'true') {
             //可以拥有滚动条
             _extend.scroll = 'true';
-            _extend.scrollSpeed = 100;
+            _extend.scrollSpeed = 80;
             _extend.move = false;
-            _extend.mouseStartY = 0;
-            _extend.topStart = 0;
+            _extend.mouseLastY = 0;
             var id = _index.nextIndex();
-            var scrollHtml = '<div id="' + id + '" class="scroll"></div>';
+            var scrollHtml = '<div id="' + id + '" class="scroll" style="height:0;top:0;"></div>';
             component.$this.append(scrollHtml);
             var $scroll = $('#' + id);
             _extend.$scroll = $scroll;
@@ -27,18 +26,16 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             _extend.scrollBottomEventHandler = null;
             //滚动条事件
             //滚动条mousedown
-            $scroll.mousedown(function(event) {
-                $scroll.addClass('move');
+            $scroll.mousedown(function(e) {
+                _extend.$scroll.addClass('move');
                 _extend.move = true;
-                _extend.mouseStartY = event.pageY;
-                _extend.topStart = component.$this.scrollTop();
+                _extend.mouseLastY = e.pageY;
                 var _root = component._components.getRoot();
                 //绑定全局mousedown事件,当鼠标放开时，停止滚动
-                _root.$this.bind('mouseup', function(event) {
+                _root.$this.bind('mouseup', function(e) {
                     $scroll.removeClass('move');
                     _extend.move = false;
-                    _extend.mouseStartY = 0;
-                    _extend.topStart = 0;
+                    _extend.mouseLastY = 0;
                     //允许选中
                     _root.$this.unbind('selectstart').css({
                         '-moz-user-select': 'text',
@@ -52,21 +49,28 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                     _root.$this.unbind('mouseup');
                 });
                 //绑定全局mousemove,检测鼠标坐标的y轴变化，同步改变滚动条
-                _root.$this.bind('mousemove', function(event) {
+                _root.$this.bind('mousemove', function(e) {
                     if (_extend.move) {
                         var scrollHeight = component.$this[0].scrollHeight;
                         var clientHeight = component.$this[0].clientHeight;
                         if (clientHeight < scrollHeight) {
-                            var newTop = _extend.topStart + event.pageY - _extend.mouseStartY;
-                            if (newTop > scrollHeight - clientHeight) {
-                                newTop = scrollHeight - clientHeight;
+                            var dy = e.pageY - _extend.mouseLastY;
+                            var result = component._utils.scrollTop(dy, component);
+                            switch (result) {
+                                case 1:
+                                    if (component._extend.scrollTopEventHandler) {
+                                        component._extend.scrollTopEventHandler(component);
+                                    }
+                                    break;
+                                case 2:
+                                    if (component._extend.scrollBottomEventHandler) {
+                                        component._extend.scrollBottomEventHandler(component);
+                                    }
+                                    break;
                             }
-                            if (newTop < 0) {
-                                newTop = 0;
-                            }
-                            component._utils.scrollTop(newTop, component);
-                            component.$this.scrollTop(newTop);
+                            _extend.mouseLastY = e.pageY;
                         }
+
                     }
                 });
                 //禁止选中
@@ -81,33 +85,28 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                 });
             });
             //绑定滚动事件
-            component.$this.mousewheel(function(event, delta, deltaX, deltaY) {
+            component.$this.mousewheel(function(e, delta, deltaX, deltaY) {
                 if (component._extend.scroll === 'true') {
                     var scrollHeight = component.$this[0].scrollHeight;
                     var clientHeight = component.$this[0].clientHeight;
                     if (clientHeight < scrollHeight) {
                         var speed = component._extend.scrollSpeed;
-                        var top = component.$this.scrollTop();
                         if (delta > 0) {
                             speed = -speed;
                         }
-                        var newTop = top + speed;
-                        if (newTop > scrollHeight - clientHeight) {
-                            newTop = scrollHeight - clientHeight;
-                            //滚动到底部
-                            if (component._extend.scrollBottomEventHandler) {
-                                component._extend.scrollBottomEventHandler(component);
-                            }
+                        var result = component._utils.scrollTop(speed, component);
+                        switch (result) {
+                            case 1:
+                                if (component._extend.scrollTopEventHandler) {
+                                    component._extend.scrollTopEventHandler(component);
+                                }
+                                break;
+                            case 2:
+                                if(component._extend.scrollBottomEventHandler) {
+                                    component._extend.scrollBottomEventHandler(component);
+                                }
+                                break;
                         }
-                        if (newTop < 0) {
-                            newTop = 0;
-                            //滚动到头部
-                            if (component._extend.scrollTopEventHandler) {
-                                component._extend.scrollTopEventHandler(component);
-                            }
-                        }
-                        component._utils.scrollTop(newTop, component);
-                        component.$this.scrollTop(newTop);
                     } else {
                         component._extend.$scroll.css({height: 0});
                         //滚动到头部
@@ -131,18 +130,15 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
         component.scrollBottom = function() {
             if (this._extend.scroll === 'true') {
                 var $this = this.$this;
-                var scrollHeight = $this[0].scrollHeight;
-                var clientHeight = $this[0].clientHeight;
-                var newTop = scrollHeight - clientHeight;
-                this._utils.scrollTop(newTop, this);
-                $this.scrollTop(newTop);
+                var dy = this._extend.clientHeight - this._extend.sHeight;
+                this._utils.scrollTop(dy, this);
             }
         };
         component.scrollTop = function() {
             if (this._extend.scroll === 'true') {
                 var $this = this.$this;
-                this._utils.scrollTop(0, this);
-                $this.scrollTop(0);
+                var dy = this._extend.clientHeight - this._extend.sHeight;
+                this._utils.scrollTop(-dy, this);
             }
         };
         //

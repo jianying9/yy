@@ -349,22 +349,36 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             var sHeight = 0;
             if (clientHeight < scrollHeight) {
                 _extend.scrollHeight = scrollHeight;
+                _extend.clientHeight = clientHeight;
                 var sHeight = parseInt(Math.pow(clientHeight, 2) / scrollHeight);
                 _extend.seed = (scrollHeight - clientHeight) / (scrollHeight - sHeight);
                 _extend.sHeight = sHeight;
             }
             _extend.$scroll.css({height: sHeight});
         },
-        scrollTop: function(top, component) {
+        scrollTop: function(dy, component) {
+            //0-滚动到头部，1-在中间，2滚动到底部
+            var result = 1;
             var _extend = component._extend;
-            var seed = _extend.seed;
-            var scrollHeight = _extend.scrollHeight;
-            var sHeight = _extend.sHeight;
-            var newTop = parseInt(top / seed);
-            if (newTop + sHeight > scrollHeight) {
-                newTop = scrollHeight - sHeight;
+            var scrollTop = component.$this.scrollTop();
+            var cssTop = parseInt(_extend.$scroll.css('top'));
+            var newCssTop = parseInt((dy + cssTop - scrollTop) / (1 - _extend.seed));
+            var newScrollTop = parseInt(newCssTop * _extend.seed);
+            if(newCssTop + _extend.sHeight > _extend.scrollHeight) {
+                newCssTop = _extend.scrollHeight - _extend.sHeight;
+                newScrollTop = _extend.scrollHeight - _extend.clientHeight;
+                //滚动到底部
+                result = 2;
             }
-            _extend.$scroll.css({top: newTop});
+            if(newCssTop < 0) {
+                newCssTop = 0;
+                newScrollTop = 0;
+                //滚动到头部
+                result = 1;
+            }
+            _extend.$scroll.css({top: newCssTop});
+            component.$this.scrollTop(newScrollTop);
+            return result;
         },
         validate: function(data, config) {
             var result = true;
