@@ -819,7 +819,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     var _context = {
         httpServer: 'http://127.0.0.1/service.io',
         webSocketServer: 'ws://127.0.0.1/service.io',
-        logLevel: 4,
+        logLevel: 3,
         bodyWidth: el.clientWidth,
         bodyHeight: el.clientHeight - 1,
         version: 1
@@ -853,7 +853,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             }
         };
         _logger.error = function(msg) {
-            if (this._loggerImpl && this._context.logLevel >= 2) {
+            if (this._loggerImpl && this._context.logLevel >= 1) {
                 this._loggerImpl.debug('ERROR:' + msg);
             }
         };
@@ -1532,7 +1532,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     msgText += '}';
                     if (that.webSocket && that.webSocket.readyState === 1) {
                         that.webSocket.send(msgText);
-                        that.webSocket._logger.debug('sendMessage:' + msgText);
+                        that.webSocket._logger.info('sendMessage:' + msgText);
                     } else {
                         if (that.webSocket && that.webSocket.readyState !== 1) {
                             that.webSocket.close();
@@ -1543,22 +1543,22 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         that.webSocket._logger = _logger;
                         that.webSocket._event = _event;
                         that.webSocket.onopen = function(event) {
-                            this._logger.debug('connect:' + this._server);
+                            this._logger.info('connect:' + this._server);
                             this.send(msgText);
-                            this._logger.debug('sendMessage:' + msgText);
+                            this._logger.info('sendMessage:' + msgText);
                         };
                         that.webSocket.onmessage = function(event) {
-                            this._logger.debug('onMessage:' + event.data);
+                            this._logger.info('onMessage:' + event.data);
                             var res = eval('(' + event.data + ')');
                             that.notify(res);
                         };
                         that.webSocket.onclose = function(event) {
                             delete that.webSocket;
-                            this._logger.debug('close:' + this._server);
+                            this._logger.info('close:' + this._server);
                         };
                         that.webSocket.onerror = function(event) {
                             delete that.webSocket;
-                            this._logger.debug('error:' + this._server);
+                            this._logger.info('error:' + this._server);
                         };
                     }
                 };
