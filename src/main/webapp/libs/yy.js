@@ -1150,13 +1150,13 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             var cssTop = parseInt(_extend.$scroll.css('top'));
             var newCssTop = parseInt((dy + cssTop - scrollTop) / (1 - _extend.seed));
             var newScrollTop = parseInt(newCssTop * _extend.seed);
-            if(newCssTop + _extend.sHeight > _extend.scrollHeight) {
+            if (newCssTop + _extend.sHeight > _extend.scrollHeight) {
                 newCssTop = _extend.scrollHeight - _extend.sHeight;
                 newScrollTop = _extend.scrollHeight - _extend.clientHeight;
                 //滚动到底部
                 result = 2;
             }
-            if(newCssTop < 0) {
+            if (newCssTop < 0) {
                 newCssTop = 0;
                 newScrollTop = 0;
                 //滚动到头部
@@ -1253,42 +1253,49 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             msg.seed = seed;
         },
         notify: function(res) {
-            //DENIED状态处理
-            if (res.state === 'DENIED' && res.error) {
-                //请求加密验证时间间隔异常，重新同步时间
-                var clientTime = (new Date()).getTime();
-                this.difftime = res.error - clientTime;
-                //写入cookie
-                var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
-                var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
-                _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 1});
-            }
-            if (res.act) {
-                var action = this.actions[res.act];
-                if (action) {
-                    if (res.sid) {
-                        _session.sid = res.sid;
-                    }
-                    var listener;
-                    for (var id in action) {
-                        listener = action[id];
-                        listener.func(listener.target, res);
-                    }
+            //判断是否是批量消息
+            if (Object.prototype.toString.apply(res) === '[object Array]') {
+                for(var index = 0; index < res.length; index++) {
+                    this.notify(res[index]);
                 }
             } else {
-                if (res.wolf && res.wolf === 'TIME') {
-                    //时间同步
+                //DENIED状态处理
+                if (res.state === 'DENIED' && res.error) {
+                    //请求加密验证时间间隔异常，重新同步时间
                     var clientTime = (new Date()).getTime();
-                    this.difftime = res.time - clientTime;
+                    this.difftime = res.error - clientTime;
                     //写入cookie
                     var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
                     var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
                     _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 1});
-                    //判断是否有时间同步回调方法
-                    var timeInit = self._timeInit;
-                    if (timeInit) {
-                        timeInit();
-                        delete self._timeInit;
+                }
+                if (res.act) {
+                    var action = this.actions[res.act];
+                    if (action) {
+                        if (res.sid) {
+                            _session.sid = res.sid;
+                        }
+                        var listener;
+                        for (var id in action) {
+                            listener = action[id];
+                            listener.func(listener.target, res);
+                        }
+                    }
+                } else {
+                    if (res.wolf && res.wolf === 'TIME') {
+                        //时间同步
+                        var clientTime = (new Date()).getTime();
+                        this.difftime = res.time - clientTime;
+                        //写入cookie
+                        var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
+                        var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
+                        _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 1});
+                        //判断是否有时间同步回调方法
+                        var timeInit = self._timeInit;
+                        if (timeInit) {
+                            timeInit();
+                            delete self._timeInit;
+                        }
                     }
                 }
             }
