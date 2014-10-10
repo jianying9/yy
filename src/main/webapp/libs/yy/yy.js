@@ -468,7 +468,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         },
         notify: function(res) {
             //判断是否是批量消息
-            if (toString.apply(res) === '[object Array]') {
+            if (Object.prototype.toString.apply(res) === '[object Array]') {
                 for(var index = 0; index < res.length; index++) {
                     this.notify(res[index]);
                 }
