@@ -1255,7 +1255,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         notify: function(res) {
             //判断是否是批量消息
             if (Object.prototype.toString.apply(res) === '[object Array]') {
-                for(var index = 0; index < res.length; index++) {
+                for (var index = 0; index < res.length; index++) {
                     this.notify(res[index]);
                 }
             } else {
@@ -1318,10 +1318,8 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                             getPushMessage();
                         }
                     } else {
-                        if (res.state && res.act) {
-                            that.notify(res);
-                            getPushMessage();
-                        }
+                        that.notify(res);
+                        getPushMessage();
                     }
                 });
             };
