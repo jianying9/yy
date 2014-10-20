@@ -519,7 +519,11 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             var that = this;
             that.createSeed(msg);
             $.getJSON(_context.httpServer + '?callback=?', msg, function(res) {
-                that.notify(res);
+                try {
+                    that.notify(res);
+                } catch (e) {
+                    that._logger.error('error:' + e);
+                }
             });
         },
         startComet: function() {
@@ -532,7 +536,11 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                             getPushMessage();
                         }
                     } else {
-                        that.notify(res);
+                        try {
+                            that.notify(res);
+                        } catch (e) {
+                            that._logger.error('error:' + e);
+                        }
                         getPushMessage();
                     }
                 });
@@ -769,7 +777,11 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         that.webSocket.onmessage = function(event) {
                             this._logger.info('onMessage:' + event.data);
                             var res = eval('(' + event.data + ')');
-                            that.notify(res);
+                            try {
+                                that.notify(res);
+                            } catch (e) {
+                                this._logger.error('error:' + e);
+                            }
                         };
                         that.webSocket.onclose = function(event) {
                             delete that.webSocket;
