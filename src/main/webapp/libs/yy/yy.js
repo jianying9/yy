@@ -768,33 +768,34 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         that.webSocket.send(msgText);
                         that.webSocket._logger.info('sendMessage:' + msgText);
                     } else {
-                        if (that.webSocket && that.webSocket.readyState !== 1) {
-                            that.webSocket.close();
-                            delete that.webSocket;
-                        }
-                        that.webSocket = new Socket(_context.webSocketServer);
-                        that.webSocket._server = _context.webSocketServer;
-                        that.webSocket._logger = _logger;
-                        that.webSocket._event = _event;
-                        that.webSocket.onopen = function(event) {
+                        delete that.webSocket;
+                        var webSocket = new Socket(_context.webSocketServer);
+                        webSocket._server = _context.webSocketServer;
+                        webSocket._logger = _logger;
+                        webSocket._event = _event;
+                        webSocket.onopen = function(event) {
                             this._logger.info('connect:' + this._server);
                             this.send(msgText);
                             this._logger.info('sendMessage:' + msgText);
                         };
-                        that.webSocket.onmessage = function(event) {
+                        webSocket.onmessage = function(event) {
                             this._logger.info('onMessage:' + event.data);
                             var res = eval('(' + event.data + ')');
+                            if(res.sid) {
+                                //保持
+                                that.webSocket = this;
+                            }
                             try {
                                 that.notify(res);
                             } catch (e) {
                                 this._logger.error('error:' + e);
                             }
                         };
-                        that.webSocket.onclose = function(event) {
+                        webSocket.onclose = function(event) {
                             delete that.webSocket;
                             this._logger.info('close:' + this._server);
                         };
-                        that.webSocket.onerror = function(event) {
+                        webSocket.onerror = function(event) {
                             delete that.webSocket;
                             this._logger.info('error:' + this._server);
                         };
