@@ -233,11 +233,13 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         _logger: _logger,
         _taskQueue: {},
         submitTask: function(task) {
-            var id = this._index.nextIndex();
-            if (!task.nextTime || task.nextTime < 1) {
-                task.nextTime = 10;
+            if (!task.id) {
+                task.id = this._index.nextIndex();
             }
-            this._taskQueue[id] = task;
+            if (!task.nextTime || task.nextTime < 1) {
+                task.nextTime = 2;
+            }
+            this._taskQueue[task.id] = task;
         },
         start: function() {
             var task;
@@ -250,7 +252,12 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                 task.nextTime--;
                 if (task.nextTime === 0) {
                     //时间倒计时为0，开始执行
-                    complete = task.execute();
+                    complete = true;
+                    try {
+                        complete = task.execute();
+                    } catch (e) {
+                        this._logger.error('timer execute error:' + e);
+                    }
                     if (complete) {
                         delete this._taskQueue[id];
                     }
@@ -258,14 +265,14 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             }
         }
     };
-    //执行定时任务，最小周期为0.1秒
+    //执行定时任务，最小周期为0.5秒
     setInterval(function() {
         try {
             _timerTaskManager.start();
         } catch (e) {
             _logger.error('timer error' + e);
         }
-    }, 100);
+    }, 500);
     self.submitTimerTask = function(timerTask) {
         _timerTaskManager.submitTask(timerTask);
     };
