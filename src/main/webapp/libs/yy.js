@@ -1541,6 +1541,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             if ((window.MozWebSocket || window.WebSocket) && _context.webSocketServer) {
                 var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
                 //初始化websocket
+                _message.index = 0;
                 _message.send = function(msg) {
                     var that = this;
                     that.createSeed(msg);
@@ -1552,38 +1553,41 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     msgText += '}';
                     if (that.webSocket && that.webSocket.readyState === 1) {
                         that.webSocket.send(msgText);
-                        that.webSocket._logger.info('sendMessage:' + msgText);
+                        that.webSocket._logger.info(that.webSocket.id + ':sendMessage:' + msgText);
                     } else {
                         delete that.webSocket;
+                        that.index++;
                         var webSocket = new Socket(_context.webSocketServer);
                         webSocket._server = _context.webSocketServer;
                         webSocket._logger = _logger;
                         webSocket._event = _event;
+                        webSocket.id = that.index;
                         webSocket.onopen = function(event) {
-                            this._logger.info('connect:' + this._server);
+                            this._logger.info(this.id + ':connect:' + this._server);
                             this.send(msgText);
-                            this._logger.info('sendMessage:' + msgText);
+                            this._logger.info(this.id + ':sendMessage:' + msgText);
                         };
                         webSocket.onmessage = function(event) {
-                            this._logger.info('onMessage:' + event.data);
+                            this._logger.info(this.id + ':onMessage:' + event.data);
                             var res = eval('(' + event.data + ')');
                             if(res.sid) {
                                 //保持
+                                this._logger.info(this.id + ':hold:' + res.sid);
                                 that.webSocket = this;
                             }
                             try {
                                 that.notify(res);
                             } catch (e) {
-                                this._logger.error('error:' + e);
+                                this._logger.error(this.id + ':error:' + e);
                             }
                         };
                         webSocket.onclose = function(event) {
                             delete that.webSocket;
-                            this._logger.info('close:' + this._server);
+                            this._logger.info(this.id + ':close:' + this._server);
                         };
                         webSocket.onerror = function(event) {
                             delete that.webSocket;
-                            this._logger.info('error:' + this._server);
+                            this._logger.info(this.id + ':error:' + this._server);
                         };
                     }
                 };
