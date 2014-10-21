@@ -769,7 +769,6 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         that.webSocket.send(msgText);
                         that.webSocket._logger.info(that.webSocket.id + ':sendMessage:' + msgText);
                     } else {
-                        delete that.webSocket;
                         that.index++;
                         var webSocket = new Socket(_context.webSocketServer);
                         webSocket._server = _context.webSocketServer;
@@ -796,11 +795,9 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                             }
                         };
                         webSocket.onclose = function(event) {
-                            delete that.webSocket;
                             this._logger.info(this.id + ':close:' + this._server);
                         };
                         webSocket.onerror = function(event) {
-                            delete that.webSocket;
                             this._logger.info(this.id + ':error:' + this._server);
                         };
                     }
