@@ -102,7 +102,7 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                                 }
                                 break;
                             case 2:
-                                if(component._extend.scrollBottomEventHandler) {
+                                if (component._extend.scrollBottomEventHandler) {
                                     component._extend.scrollBottomEventHandler(component);
                                 }
                                 break;
@@ -220,6 +220,7 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             var html = '';
             var itemData;
             var item;
+            var id;
             var itemCompleted = that._extend.itemCompleted;
             var localData = that._extend.data;
             for (var dataIndex = 0; dataIndex < data.length; dataIndex++) {
@@ -234,7 +235,9 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                     item.remove();
                 }
                 localData[keyValue] = itemData;
-                html += '<div id="' + keyValue + '" class="list_item ';
+                id = keyValue + '';
+                id = id.replace(/\W/g, '-');
+                html += '<div id="' + id + '" key="' + keyValue + '" class="list_item ';
                 if (itemClazz) {
                     html += itemClazz;
                 }
@@ -282,7 +285,9 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                 item.remove();
             }
             localData[keyValue] = itemData;
-            html += '<div id="' + keyValue + '" class="list_item ';
+            var id = keyValue + '';
+            id = id.replace(/\W/g, '-');
+            html += '<div id="' + id + '" key="' + keyValue + '" class="list_item ';
             if (itemClazz) {
                 html += itemClazz;
             }
@@ -293,7 +298,7 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             //
             item = that._components.create({
                 type: 'list_item',
-                $this: $('#' + keyValue),
+                $this: $('#' + id),
                 parent: that
             });
             //
@@ -323,7 +328,9 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
                 item.remove();
             }
             localData[keyValue] = itemData;
-            html += '<div id="' + keyValue + '" class="list_item ';
+            var id = keyValue + '';
+            id = id.replace(/\W/g, '-');
+            html += '<div id="' + id + '" key="' + keyValue + '" class="list_item ';
             if (itemClazz) {
                 html += itemClazz;
             }
@@ -338,7 +345,7 @@ define('yy/list', ['require', 'yy/yy', 'yy/list_item'], function(require) {
             //
             item = that._components.create({
                 type: 'list_item',
-                $this: $('#' + keyValue),
+                $this: $('#' + id),
                 parent: that
             });
             that.firstChild = item;

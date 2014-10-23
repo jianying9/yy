@@ -653,7 +653,11 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     });
                 }
             } else {
-                var key = ctx.$this.attr('id');
+                //
+                var key = ctx.$this.attr('key');
+                if(!key) {
+                    key = ctx.$this.attr('id');
+                }
                 var id = _components._index.nextIndex();
                 var component = {
                     id: id,
