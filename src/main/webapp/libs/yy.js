@@ -1122,23 +1122,26 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             return result;
         },
         shortDate: function(thisDateStr) {
-            var result;
+            var result = thisDateStr;
             thisDateStr = thisDateStr.replace(/-/g, '/');
             var thisDate = new Date(Date.parse(thisDateStr));
             var nowDate = new Date();
             var dYear = nowDate.getFullYear() - thisDate.getFullYear();
-            if (dYear > 0) {
-                result = dYear + '年前';
-            } else {
+            if (dYear === 0) {
                 var dMonth = nowDate.getMonth() - thisDate.getMonth();
-                if (dMonth > 0) {
-                    result = dMonth + '月前';
-                } else {
+                if (dMonth === 0) {
                     var dDay = nowDate.getDate() - thisDate.getDate();
-                    if (dDay > 0) {
-                        result = dDay + '天前';
-                    } else {
-                        result = thisDateStr.split(' ')[1];
+                    if (dDay <= 2) {
+                        switch (dDay) {
+                            case 2:
+                                result = '前天 ' + thisDateStr.split(' ')[1];
+                                break;
+                            case 1:
+                                result = '昨天 ' + thisDateStr.split(' ')[1];
+                                break;
+                            default:
+                                result = thisDateStr.split(' ')[1];
+                        }
                     }
                 }
             }
@@ -1448,7 +1451,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
             } else {
                 //
                 var key = ctx.$this.attr('key');
-                if(!key) {
+                if (!key) {
                     key = ctx.$this.attr('id');
                 }
                 var id = _components._index.nextIndex();
@@ -1580,7 +1583,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         webSocket.onmessage = function(event) {
                             this._logger.info(this.id + ':onMessage:' + event.data);
                             var res = eval('(' + event.data + ')');
-                            if(res.sid) {
+                            if (res.sid) {
                                 //保持
                                 this._logger.info(this.id + ':hold:' + res.sid);
                                 that.webSocket = this;
