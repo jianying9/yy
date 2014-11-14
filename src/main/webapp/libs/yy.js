@@ -839,6 +839,139 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     self.getConfig = function(name) {
         return _context[name];
     };
+    //utils创建工具对象
+    var _utils = {
+        attr: function(name, $target, defValue) {
+            var value = $target.attr(name);
+            if (!value) {
+                value = defValue;
+            }
+            return value;
+        },
+        trim: function(value) {
+            return $.trim(value);
+        },
+        getDate: function() {
+            var date = new Date();
+            var month = date.getMonth() + 1;
+            if (month < 10) {
+                month = '0' + month;
+            }
+            var day = date.getDate();
+            if (day < 10) {
+                day = '0' + day;
+            }
+            var result = date.getFullYear() + '-' + month + '-' + day;
+            return result;
+        },
+        getDateTime: function() {
+            var date = new Date();
+            var month = date.getMonth() + 1;
+            if (month < 10) {
+                month = '0' + month;
+            }
+            var day = date.getDate();
+            if (day < 10) {
+                day = '0' + day;
+            }
+            var hour = date.getHours();
+            if (hour < 10) {
+                hour = '0' + hour;
+            }
+            var minute = date.getMinutes();
+            if (minute < 10) {
+                minute = '0' + minute;
+            }
+            var second = date.getSeconds();
+            if (second < 10) {
+                second = '0' + second;
+            }
+            var result = date.getFullYear() + '-' + month + '-'
+                    + day + ' ' + hour + ':'
+                    + minute + ':' + second;
+            return result;
+        },
+        shortDate: function(thisDateStr) {
+            var result = thisDateStr;
+            thisDateStr = thisDateStr.replace(/-/g, '/');
+            var thisDate = new Date(Date.parse(thisDateStr));
+            var nowDate = new Date();
+            var dYear = nowDate.getFullYear() - thisDate.getFullYear();
+            if (dYear === 0) {
+                var dMonth = nowDate.getMonth() - thisDate.getMonth();
+                if (dMonth === 0) {
+                    var dDay = nowDate.getDate() - thisDate.getDate();
+                    if (dDay <= 2) {
+                        switch (dDay) {
+                            case 2:
+                                result = '前天 ' + thisDateStr.split(' ')[1];
+                                break;
+                            case 1:
+                                result = '昨天 ' + thisDateStr.split(' ')[1];
+                                break;
+                            default:
+                                result = thisDateStr.split(' ')[1];
+                        }
+                    }
+                }
+            }
+            return result;
+        },
+        initScroll: function(clientHeight, scrollHeight, component) {
+            var _extend = component._extend;
+            var sHeight = 0;
+            if (clientHeight < scrollHeight) {
+                _extend.scrollHeight = scrollHeight;
+                _extend.clientHeight = clientHeight;
+                var sHeight = parseInt(Math.pow(clientHeight, 2) / scrollHeight);
+                _extend.seed = (scrollHeight - clientHeight) / (scrollHeight - sHeight);
+                _extend.sHeight = sHeight;
+            }
+            _extend.$scroll.css({height: sHeight});
+        },
+        scrollTop: function(dy, component) {
+            //0-滚动到头部，1-在中间，2滚动到底部
+            var result = 1;
+            var _extend = component._extend;
+            var scrollTop = component.$this.scrollTop();
+            var cssTop = parseInt(_extend.$scroll.css('top'));
+            var newCssTop = parseInt((dy + cssTop - scrollTop) / (1 - _extend.seed));
+            var newScrollTop = parseInt(newCssTop * _extend.seed);
+            if (newCssTop + _extend.sHeight > _extend.scrollHeight) {
+                newCssTop = _extend.scrollHeight - _extend.sHeight;
+                newScrollTop = _extend.scrollHeight - _extend.clientHeight;
+                //滚动到底部
+                result = 2;
+            }
+            if (newCssTop < 0) {
+                newCssTop = 0;
+                newScrollTop = 0;
+                //滚动到头部
+                result = 1;
+            }
+            _extend.$scroll.css({top: newCssTop});
+            component.$this.scrollTop(newScrollTop);
+            return result;
+        },
+        validate: function(data, config) {
+            var result = true;
+            var value;
+            for (var name in config) {
+                value = data[name];
+                if (!value || value === '') {
+                    result = false;
+                    config[name].failure();
+                    break;
+                } else {
+                    config[name].success();
+                }
+            }
+            return result;
+        }
+    };
+    self.getUtils = function() {
+        return _utils;
+    };
     //logger日志对象
     var _logger = {};
     if (_browser.mozilla || _browser.webkit) {
@@ -846,22 +979,26 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         _logger._context = _context;
         _logger.debug = function(msg) {
             if (this._loggerImpl && this._context.logLevel >= 4) {
-                this._loggerImpl.debug('DEBUG:' + msg);
+                var date = _utils.getDateTime();
+                this._loggerImpl.debug(date + '-DEBUG:' + msg);
             }
         };
         _logger.info = function(msg) {
             if (this._loggerImpl && this._context.logLevel >= 3) {
-                this._loggerImpl.debug('INFO:' + msg);
+                var date = _utils.getDateTime();
+                this._loggerImpl.debug(date + '-INFO:' + msg);
             }
         };
         _logger.warn = function(msg) {
             if (this._loggerImpl && this._context.logLevel >= 2) {
-                this._loggerImpl.debug('WARN:' + msg);
+                var date = _utils.getDateTime();
+                this._loggerImpl.debug(date + '-WARN:' + msg);
             }
         };
         _logger.error = function(msg) {
             if (this._loggerImpl && this._context.logLevel >= 1) {
-                this._loggerImpl.debug('ERROR:' + msg);
+                var date = _utils.getDateTime();
+                this._loggerImpl.debug(date + '-ERROR:' + msg);
             }
         };
     } else {
@@ -1068,139 +1205,6 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
     }, 500);
     self.submitTimerTask = function(timerTask) {
         _timerTaskManager.submitTask(timerTask);
-    };
-    //utils创建工具对象
-    var _utils = {
-        attr: function(name, $target, defValue) {
-            var value = $target.attr(name);
-            if (!value) {
-                value = defValue;
-            }
-            return value;
-        },
-        trim: function(value) {
-            return $.trim(value);
-        },
-        getDate: function() {
-            var date = new Date();
-            var month = date.getMonth() + 1;
-            if (month < 10) {
-                month = '0' + month;
-            }
-            var day = date.getDate();
-            if (day < 10) {
-                day = '0' + day;
-            }
-            var result = date.getFullYear() + '-' + month + '-' + day;
-            return result;
-        },
-        getDateTime: function() {
-            var date = new Date();
-            var month = date.getMonth() + 1;
-            if (month < 10) {
-                month = '0' + month;
-            }
-            var day = date.getDate();
-            if (day < 10) {
-                day = '0' + day;
-            }
-            var hour = date.getHours();
-            if (hour < 10) {
-                hour = '0' + hour;
-            }
-            var minute = date.getMinutes();
-            if (minute < 10) {
-                minute = '0' + minute;
-            }
-            var second = date.getSeconds();
-            if (second < 10) {
-                second = '0' + second;
-            }
-            var result = date.getFullYear() + '-' + month + '-'
-                    + day + ' ' + hour + ':'
-                    + minute + ':' + second;
-            return result;
-        },
-        shortDate: function(thisDateStr) {
-            var result = thisDateStr;
-            thisDateStr = thisDateStr.replace(/-/g, '/');
-            var thisDate = new Date(Date.parse(thisDateStr));
-            var nowDate = new Date();
-            var dYear = nowDate.getFullYear() - thisDate.getFullYear();
-            if (dYear === 0) {
-                var dMonth = nowDate.getMonth() - thisDate.getMonth();
-                if (dMonth === 0) {
-                    var dDay = nowDate.getDate() - thisDate.getDate();
-                    if (dDay <= 2) {
-                        switch (dDay) {
-                            case 2:
-                                result = '前天 ' + thisDateStr.split(' ')[1];
-                                break;
-                            case 1:
-                                result = '昨天 ' + thisDateStr.split(' ')[1];
-                                break;
-                            default:
-                                result = thisDateStr.split(' ')[1];
-                        }
-                    }
-                }
-            }
-            return result;
-        },
-        initScroll: function(clientHeight, scrollHeight, component) {
-            var _extend = component._extend;
-            var sHeight = 0;
-            if (clientHeight < scrollHeight) {
-                _extend.scrollHeight = scrollHeight;
-                _extend.clientHeight = clientHeight;
-                var sHeight = parseInt(Math.pow(clientHeight, 2) / scrollHeight);
-                _extend.seed = (scrollHeight - clientHeight) / (scrollHeight - sHeight);
-                _extend.sHeight = sHeight;
-            }
-            _extend.$scroll.css({height: sHeight});
-        },
-        scrollTop: function(dy, component) {
-            //0-滚动到头部，1-在中间，2滚动到底部
-            var result = 1;
-            var _extend = component._extend;
-            var scrollTop = component.$this.scrollTop();
-            var cssTop = parseInt(_extend.$scroll.css('top'));
-            var newCssTop = parseInt((dy + cssTop - scrollTop) / (1 - _extend.seed));
-            var newScrollTop = parseInt(newCssTop * _extend.seed);
-            if (newCssTop + _extend.sHeight > _extend.scrollHeight) {
-                newCssTop = _extend.scrollHeight - _extend.sHeight;
-                newScrollTop = _extend.scrollHeight - _extend.clientHeight;
-                //滚动到底部
-                result = 2;
-            }
-            if (newCssTop < 0) {
-                newCssTop = 0;
-                newScrollTop = 0;
-                //滚动到头部
-                result = 1;
-            }
-            _extend.$scroll.css({top: newCssTop});
-            component.$this.scrollTop(newScrollTop);
-            return result;
-        },
-        validate: function(data, config) {
-            var result = true;
-            var value;
-            for (var name in config) {
-                value = data[name];
-                if (!value || value === '') {
-                    result = false;
-                    config[name].failure();
-                    break;
-                } else {
-                    config[name].success();
-                }
-            }
-            return result;
-        }
-    };
-    self.getUtils = function() {
-        return _utils;
     };
     //创建事件管理对象
     var _event = {
