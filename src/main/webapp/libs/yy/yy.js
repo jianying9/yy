@@ -29,13 +29,11 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
         return _index;
     };
     //context上下文对象
-    var el = document.compatMode === "CSS1Compat" ? document.documentElement : document.body;
     var _context = {
         httpServer: 'http://127.0.0.1/service.io',
         webSocketServer: 'ws://127.0.0.1/service.io',
+        defaultUrl: '',
         logLevel: 3,
-        bodyWidth: el.clientWidth,
-        bodyHeight: el.clientHeight - 1,
         version: 1
     };
     self.setConfig = function(config) {
@@ -511,18 +509,24 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                     }
                 } else {
                     if (res.wolf && res.wolf === 'TIME') {
-                        //时间同步
-                        var clientTime = (new Date()).getTime();
-                        this.difftime = res.time - clientTime;
-                        //写入cookie
-                        var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
-                        var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
-                        _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 1});
-                        //判断是否有时间同步回调方法
-                        var timeInit = self._timeInit;
-                        if (timeInit) {
-                            timeInit();
-                            delete self._timeInit;
+                        if (res.wolf === 'TIME') {
+                            //时间同步
+                            var clientTime = (new Date()).getTime();
+                            this.difftime = res.time - clientTime;
+                            //写入cookie
+                            var difftimeByte = CryptoJS.enc.Utf8.parse('difftime');
+                            var difftimeHex = CryptoJS.enc.Hex.stringify(difftimeByte);
+                            _cookie.setCookie(difftimeHex, this.difftime.toString(), {expires: 1});
+                            //判断是否有时间同步回调方法
+                            var timeInit = self._timeInit;
+                            if (timeInit) {
+                                timeInit();
+                                delete self._timeInit;
+                            }
+                        } else if(res.wolf === 'SHUTDOWN') {
+                            if(_context.defaultUrl) {
+                                window.location.href = _context.defaultUrl;
+                            }
                         }
                     }
                 }
