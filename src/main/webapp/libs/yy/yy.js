@@ -523,8 +523,8 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                                 timeInit();
                                 delete self._timeInit;
                             }
-                        } else if(res.wolf === 'SHUTDOWN') {
-                            if(_context.defaultUrl) {
+                        } else if (res.wolf === 'SHUTDOWN') {
+                            if (_context.defaultUrl) {
                                 window.location.href = _context.defaultUrl;
                             }
                         }
@@ -774,9 +774,51 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                 _message.send = function(msg) {
                     var that = this;
                     that.createSeed(msg);
+                    //构造json，对特殊字符转义
+                    var value;
+                    var ch;
+                    var chType;
                     var msgText = '{';
                     for (var name in msg) {
-                        msgText += '"' + name + '":"' + msg[name] + '",';
+                        value = msg[name];
+                        chType = Object.prototype.toString.apply(value);
+                        if (chType === '[object String]') {
+                            msgText += '"' + name + '":"';
+                            for (var index = 0; index < value.length; index++) {
+                                ch = value.charAt(index);
+                                switch (ch) {
+                                    case '"':
+                                        msgText += '\\"';
+                                        break;
+                                    case '\\':
+                                        msgText += '\\\\';
+                                        break;
+                                    case '\b':
+                                        msgText += '\\b';
+                                        break;
+                                    case '\n':
+                                        msgText += '\\n';
+                                        break;
+                                    case '/':
+                                        msgText += '\\/';
+                                        break;
+                                    case '\f':
+                                        msgText += '\\f';
+                                        break;
+                                    case '\r':
+                                        msgText += '\\r';
+                                        break;
+                                    case '\t':
+                                        msgText += '\\t';
+                                        break;
+                                    default:
+                                        msgText += ch;
+                                }
+                            }
+                            msgText += '",';
+                        } else if(chType === '[object Number]') {
+                            msgText += '"' + name + '":"' + value + '",';
+                        }
                     }
                     msgText = msgText.substr(0, msgText.length - 1);
                     msgText += '}';
