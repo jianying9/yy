@@ -52,7 +52,7 @@ define('yy/form', ['require', 'yy/yy'], function(require) {
                         that._extend.$files[name] = $this;
                     } else if (type === 'radio') {
                         var checked = $this.prop('checked');
-                        if(checked) {
+                        if (checked) {
                             that._extend.$fields[name] = $this;
                         }
                     } else {
@@ -97,7 +97,19 @@ define('yy/form', ['require', 'yy/yy'], function(require) {
             var $fields = this._extend.$fields;
             var $field = $fields[name];
             if ($field) {
-                $field.focus();
+                //控制光标到文字输入最后
+                var value = $field.val();
+                var input = $field.$this[0];
+                if (input.createTextRange) {
+                    var range = input.createTextRange();
+                    range.collapse(true);
+                    range.moveEnd('character', value.length);
+                    range.moveStart('character', value.length);
+                    range.select();
+                } else if (input.setSelectionRange) {
+                    input.focus(); 
+                    input.setSelectionRange(value.length, value.length);
+                }
             }
         };
         //
