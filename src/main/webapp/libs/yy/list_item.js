@@ -27,6 +27,10 @@ define('yy/list_item', ['require', 'yy/yy'], function(require) {
                 $this.addClass('selected');
             }
         };
+        component.unselected = function() {
+            var $this = this.$this;
+            $this.removeClass('selected');
+        };
         return component;
     };
     return self;
