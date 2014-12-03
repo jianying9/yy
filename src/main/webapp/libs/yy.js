@@ -93,6 +93,13 @@ define('yy/form', ['require', 'yy/yy'], function(require) {
                 $field.val(value);
             }
         };
+        component.focus = function(name) {
+            var $fields = this._extend.$fields;
+            var $field = $fields[name];
+            if ($field) {
+                $field.focus();
+            }
+        };
         //
         component.loadData = function(data) {
             var $fields = this._extend.$fields;
@@ -545,6 +552,10 @@ define('yy/list_item', ['require', 'yy/yy'], function(require) {
                 }
                 $this.addClass('selected');
             }
+        };
+        component.unselected = function() {
+            var $this = this.$this;
+            $this.removeClass('selected');
         };
         return component;
     };
