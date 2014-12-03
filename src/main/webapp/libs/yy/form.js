@@ -69,7 +69,7 @@ define('yy/form', ['require', 'yy/yy'], function(require) {
             if ($field) {
                 //控制光标到文字输入最后
                 var value = $field.val();
-                var input = $field.$this[0];
+                var input = $field[0];
                 if (input.createTextRange) {
                     var range = input.createTextRange();
                     range.collapse(true);
