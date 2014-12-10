@@ -56,6 +56,10 @@ define('yy/form', ['require', 'yy/yy'], function(require) {
             }
             return data;
         };
+        component.getField = function(name) {
+            var $fields = this._extend.$fields;
+            return $fields[name];
+        };
         component.setData = function(name, value) {
             var $fields = this._extend.$fields;
             var $field = $fields[name];
