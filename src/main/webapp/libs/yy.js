@@ -86,6 +86,10 @@ define('yy/form', ['require', 'yy/yy'], function(require) {
             }
             return data;
         };
+        component.getField = function(name) {
+            var $fields = this._extend.$fields;
+            return $fields[name];
+        };
         component.setData = function(name, value) {
             var $fields = this._extend.$fields;
             var $field = $fields[name];
@@ -1324,7 +1328,7 @@ define('yy/yy', ['require', 'jquery', 'yy/config', 'crypto'], function(require) 
                         }
                     }
                 } else {
-                    if (res.wolf && res.wolf === 'TIME') {
+                    if (res.wolf) {
                         if (res.wolf === 'TIME') {
                             //时间同步
                             var clientTime = (new Date()).getTime();
